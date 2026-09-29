@@ -3,6 +3,7 @@ package com.volunteer.platform.config;
 import com.volunteer.platform.model.Role;
 import com.volunteer.platform.model.User;
 import com.volunteer.platform.model.UserStatus;
+import com.volunteer.platform.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
@@ -30,6 +31,16 @@ import org.springframework.web.servlet.HandlerInterceptor;
 @Component
 public class LoginInterceptor implements HandlerInterceptor {
 
+    private final UserService userService;
+
+    /**
+     * UserService is injected by Spring (constructor injection) so we can re-check
+     * the user's latest status from the database on every request.
+     */
+    public LoginInterceptor(UserService userService) {
+        this.userService = userService;
+    }
+
     /**
      * Intercepts HTTP requests before they reach the controller to verify login and role authorization.
      */
@@ -46,6 +57,19 @@ public class LoginInterceptor implements HandlerInterceptor {
             response.sendRedirect(request.getContextPath() + "/login?error=auth_required");
             return false;
         }
+
+        // The session only holds a COPY of the user taken at login time.
+        // Re-load the user from the database so that if the admin blocked, deleted,
+        // or changed the role of this user, it takes effect immediately.
+        User freshUser = userService.findById(loggedInUser.getId()).orElse(null);
+        if (freshUser == null) {
+            // User was deleted by admin while logged in
+            session.invalidate();
+            response.sendRedirect(request.getContextPath() + "/login?error=auth_required");
+            return false;
+        }
+        session.setAttribute("loggedInUser", freshUser); // keep session copy up to date
+        loggedInUser = freshUser;
 
         // If user was blocked while session is active, terminate session immediately
         if (loggedInUser.getStatus() == UserStatus.BLOCKED) {
