@@ -21,6 +21,7 @@ import java.util.Optional;
  * - Aggregates approved hours for platform, organization, and volunteer stats
  * =====================================================================
  */
+@SuppressWarnings("null") // Spring Data JPA's findById(Long) is always called with non-null ids from path variables
 @Service
 public class HourLogService {
 

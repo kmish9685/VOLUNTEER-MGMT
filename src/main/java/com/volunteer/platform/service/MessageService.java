@@ -22,6 +22,7 @@ import java.util.List;
  * - Manages conversation retrieval, mark-as-read status, and unread counters.
  * =====================================================================
  */
+@SuppressWarnings("null") // Spring Data JPA's findById(Long) is always called with non-null ids from path variables
 @Service
 public class MessageService {
 

@@ -34,6 +34,7 @@ public class LoginInterceptor implements HandlerInterceptor {
      * Intercepts HTTP requests before they reach the controller to verify login and role authorization.
      */
     @Override
+    @SuppressWarnings("null") // Inherited @NonNull annotations from HandlerInterceptor; parameters are always non-null at runtime
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
         String uri = request.getRequestURI();
         HttpSession session = request.getSession(false);
@@ -48,7 +49,9 @@ public class LoginInterceptor implements HandlerInterceptor {
 
         // If user was blocked while session is active, terminate session immediately
         if (loggedInUser.getStatus() == UserStatus.BLOCKED) {
-            session.invalidate();
+            if (session != null) { // Guard against race condition where session was concurrently invalidated
+                session.invalidate();
+            }
             response.sendRedirect(request.getContextPath() + "/login?error=account_blocked");
             return false;
         }

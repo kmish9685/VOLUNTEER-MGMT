@@ -22,6 +22,7 @@ import java.util.Optional;
  * - Calculates remaining available slots per opportunity
  * =====================================================================
  */
+@SuppressWarnings("null") // Spring Data JPA's findById(Long) is always called with non-null ids from path variables
 @Service
 public class RegistrationService {
 

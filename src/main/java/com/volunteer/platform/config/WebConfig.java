@@ -29,6 +29,7 @@ public class WebConfig implements WebMvcConfigurer {
      * Registers the LoginInterceptor and specifies URL paths to protect and exclude.
      */
     @Override
+    @SuppressWarnings("null") // Inherited @NonNull annotations from WebMvcConfigurer; parameters are always non-null at runtime
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(loginInterceptor)
                 .addPathPatterns("/admin/**", "/org/**", "/volunteer/**", "/messages/**")
