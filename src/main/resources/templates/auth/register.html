@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: header('Register')}"></head>
+<body class="bg-light">
+
+    <!-- Navbar Fragment -->
+    <div th:replace="~{fragments/layout :: navbar}"></div>
+
+    <!-- Flash Alerts -->
+    <div th:replace="~{fragments/layout :: alerts}"></div>
+
+    <div class="container my-5">
+        <div class="row justify-content-center">
+            <div class="col-md-7 col-lg-6">
+
+                <!-- Alert if registrations are closed via System Settings -->
+                <div class="card p-4 shadow-sm bg-white text-center" th:if="${!allowRegistrations}">
+                    <div class="stat-icon mx-auto mb-3 bg-warning-subtle text-warning">
+                        <i class="bi bi-slash-circle fs-3"></i>
+                    </div>
+                    <h4 class="fw-bold">Registrations Are Closed</h4>
+                    <p class="text-muted">The platform administrator has temporarily paused new account registrations. Please check back later.</p>
+                    <a th:href="@{/login}" class="btn btn-outline-primary mx-auto">Return to Login</a>
+                </div>
+
+                <!-- Registration Form -->
+                <div class="card p-4 shadow-sm bg-white" th:if="${allowRegistrations}">
+                    <div class="card-body">
+                        <div class="text-center mb-4">
+                            <div class="stat-icon mx-auto mb-2 bg-primary-subtle text-primary">
+                                <i class="bi bi-person-plus fs-3"></i>
+                            </div>
+                            <h3 class="fw-bold">Create an Account</h3>
+                            <p class="text-muted small">Join our community as a passionate Volunteer or verified Organization</p>
+                        </div>
+
+                        <form th:action="@{/register}" method="post">
+                            <!-- Role Selection -->
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">I want to register as:</label>
+                                <div class="row g-2">
+                                    <div class="col-6">
+                                        <input type="radio" class="btn-check" name="role" id="roleVolunteer" value="VOLUNTEER" checked onchange="toggleOrgBio()">
+                                        <label class="btn btn-outline-primary w-100 py-2 d-flex align-items-center justify-content-center gap-2" for="roleVolunteer">
+                                            <i class="bi bi-person"></i> Volunteer
+                                        </label>
+                                    </div>
+                                    <div class="col-6">
+                                        <input type="radio" class="btn-check" name="role" id="roleOrg" value="ORGANIZATION" onchange="toggleOrgBio()">
+                                        <label class="btn btn-outline-primary w-100 py-2 d-flex align-items-center justify-content-center gap-2" for="roleOrg">
+                                            <i class="bi bi-building"></i> Organization
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Full Name -->
+                            <div class="mb-3">
+                                <label for="fullName" class="form-label fw-semibold" id="nameLabel">Full Name</label>
+                                <input type="text" class="form-control" id="fullName" name="fullName"
+                                       placeholder="e.g. Rahul Verma" required>
+                            </div>
+
+                            <!-- Email -->
+                            <div class="mb-3">
+                                <label for="email" class="form-label fw-semibold">Email Address</label>
+                                <input type="email" class="form-control" id="email" name="email"
+                                       placeholder="name@example.com" required>
+                            </div>
+
+                            <!-- Password -->
+                            <div class="mb-3">
+                                <label for="password" class="form-label fw-semibold">Password</label>
+                                <input type="password" class="form-control" id="password" name="password"
+                                       placeholder="Create a secure password" required minlength="4">
+                            </div>
+
+                            <!-- Phone -->
+                            <div class="mb-3">
+                                <label for="phone" class="form-label fw-semibold">Phone Number</label>
+                                <input type="text" class="form-control" id="phone" name="phone"
+                                       placeholder="+91 9876543210">
+                            </div>
+
+                            <!-- Organization Description (shown only if role is ORGANIZATION) -->
+                            <div class="mb-3" id="orgDescContainer" style="display: none;">
+                                <label for="organizationDescription" class="form-label fw-semibold">Organization Mission / Description</label>
+                                <textarea class="form-control" id="organizationDescription" name="organizationDescription"
+                                          rows="3" placeholder="Tell volunteers about your mission, community drives, and focus areas..."></textarea>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold mt-2 shadow-sm">
+                                Complete Registration
+                            </button>
+                        </form>
+
+                        <div class="text-center mt-4">
+                            <p class="small text-muted mb-0">Already registered?
+                                <a th:href="@{/login}" class="fw-semibold text-decoration-none">Sign in here</a>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer Fragment -->
+    <div th:replace="~{fragments/layout :: footer}"></div>
+
+    <script>
+        function toggleOrgBio() {
+            const isOrg = document.getElementById('roleOrg').checked;
+            const orgContainer = document.getElementById('orgDescContainer');
+            const nameLabel = document.getElementById('nameLabel');
+
+            if (isOrg) {
+                orgContainer.style.display = 'block';
+                nameLabel.innerText = 'Organization / NGO Name';
+                document.getElementById('fullName').placeholder = 'e.g. Green Earth Foundation';
+            } else {
+                orgContainer.style.display = 'none';
+                nameLabel.innerText = 'Full Name';
+                document.getElementById('fullName').placeholder = 'e.g. Rahul Verma';
+            }
+        }
+    </script>
+</body>
+</html>

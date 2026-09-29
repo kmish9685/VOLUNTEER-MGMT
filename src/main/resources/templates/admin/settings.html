@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: header('System Settings')}"></head>
+<body class="bg-light">
+
+    <!-- Navbar Fragment -->
+    <div th:replace="~{fragments/layout :: navbar}"></div>
+
+    <!-- Flash Alerts -->
+    <div th:replace="~{fragments/layout :: alerts}"></div>
+
+    <div class="container my-4">
+        <!-- Header -->
+        <div class="mb-4">
+            <span class="badge bg-primary-subtle text-primary fw-semibold px-2 py-1">Platform Configuration</span>
+            <h2 class="fw-bold mb-0">System Settings</h2>
+            <p class="text-muted small">Configure global platform rules, limits, and dynamic parameters</p>
+        </div>
+
+        <div class="row g-4">
+            <!-- Settings Form Cards -->
+            <div class="col-lg-8">
+                <div class="card bg-white shadow-sm p-4">
+                    <h5 class="fw-bold mb-3 border-bottom pb-2">
+                        <i class="bi bi-sliders text-primary me-2"></i> Configurable Settings
+                    </h5>
+
+                    <div class="table-responsive">
+                        <table class="table table-bordered align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th style="width: 30%;">Setting Key</th>
+                                    <th>Description &amp; Current Value</th>
+                                    <th style="width: 30%;">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="setting : ${settings}">
+                                    <td>
+                                        <code class="fw-bold text-primary" th:text="${setting.settingKey}">setting_key</code>
+                                    </td>
+                                    <td>
+                                        <div class="small text-muted mb-1" th:text="${setting.description}">Setting description</div>
+                                        <div class="fw-semibold text-dark">
+                                            Current: <span class="badge bg-light text-dark border" th:text="${setting.settingValue}">value</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <form th:action="@{/admin/settings/update}" method="post" class="d-flex gap-2">
+                                            <input type="hidden" name="settingKey" th:value="${setting.settingKey}">
+
+                                            <!-- Boolean dropdown if value is true/false -->
+                                            <th:block th:if="${setting.settingValue == 'true' or setting.settingValue == 'false'}">
+                                                <select class="form-select form-select-sm" name="settingValue">
+                                                    <option value="true" th:selected="${setting.settingValue == 'true'}">true</option>
+                                                    <option value="false" th:selected="${setting.settingValue == 'false'}">false</option>
+                                                </select>
+                                            </th:block>
+
+                                            <!-- Number input if max_hours_per_log -->
+                                            <th:block th:if="${setting.settingKey == 'max_hours_per_log'}">
+                                                <input type="number" class="form-control form-control-sm" name="settingValue"
+                                                       th:value="${setting.settingValue}" min="1" max="24" required>
+                                            </th:block>
+
+                                            <!-- Text input for general strings like platform_name -->
+                                            <th:block th:if="${setting.settingValue != 'true' and setting.settingValue != 'false' and setting.settingKey != 'max_hours_per_log'}">
+                                                <input type="text" class="form-control form-control-sm" name="settingValue"
+                                                       th:value="${setting.settingValue}" required>
+                                            </th:block>
+
+                                            <button type="submit" class="btn btn-primary btn-sm text-nowrap">
+                                                <i class="bi bi-check2"></i> Save
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Viva Explanation Sidebar -->
+            <div class="col-lg-4">
+                <div class="card bg-white shadow-sm p-4 border-start border-4 border-info">
+                    <h6 class="fw-bold text-dark mb-3">
+                        <i class="bi bi-info-circle-fill text-info me-2"></i> How Settings Alter Code Logic
+                    </h6>
+                    <ul class="list-unstyled small text-secondary mb-0">
+                        <li class="mb-3">
+                            <strong class="text-dark">platform_name:</strong><br>
+                            Dynamically read via <code>SettingService.getValue()</code> in <code>GlobalModelAttributes</code> and rendered on every page's navbar and title.
+                        </li>
+                        <li class="mb-3">
+                            <strong class="text-dark">allow_registrations:</strong><br>
+                            If set to <code>false</code>, <code>UserService.registerUser()</code> blocks new signups and <code>register.html</code> displays a "Registrations are closed" banner.
+                        </li>
+                        <li class="mb-3">
+                            <strong class="text-dark">max_hours_per_log:</strong><br>
+                            Enforced in <code>HourLogService.logHours()</code>. Volunteers cannot log hours exceeding this threshold in a single entry.
+                        </li>
+                        <li>
+                            <strong class="text-dark">auto_approve_opportunities:</strong><br>
+                            Evaluated in <code>OpportunityService.createOpportunity()</code>. If true, newly posted events bypass Admin review and are immediately <code>APPROVED</code>.
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Footer Fragment -->
+    <div th:replace="~{fragments/layout :: footer}"></div>
+
+</body>
+</html>

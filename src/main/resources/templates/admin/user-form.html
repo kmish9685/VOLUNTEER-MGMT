@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: header(${isEdit ? 'Edit User' : 'Create User'})}"></head>
+<body class="bg-light">
+
+    <!-- Navbar Fragment -->
+    <div th:replace="~{fragments/layout :: navbar}"></div>
+
+    <!-- Flash Alerts -->
+    <div th:replace="~{fragments/layout :: alerts}"></div>
+
+    <div class="container my-5">
+        <div class="row justify-content-center">
+            <div class="col-md-7 col-lg-6">
+                <div class="card p-4 shadow-sm bg-white">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center gap-3 mb-4">
+                            <div class="stat-icon bg-primary-subtle text-primary">
+                                <i th:class="${isEdit ? 'bi bi-person-gear' : 'bi bi-person-plus'}"></i>
+                            </div>
+                            <div>
+                                <h3 class="fw-bold mb-0" th:text="${isEdit ? 'Edit User Profile' : 'Create New User'}">User Form</h3>
+                                <p class="text-muted small mb-0">Set up or modify platform user credentials and roles</p>
+                            </div>
+                        </div>
+
+                        <form th:action="${isEdit ? '/admin/users/edit/' + user.id : '/admin/users/new'}" method="post">
+                            <!-- Role -->
+                            <div class="mb-3">
+                                <label for="role" class="form-label fw-semibold">User Role</label>
+                                <select class="form-select" id="role" name="role" required onchange="checkOrgRole()">
+                                    <option th:each="r : ${roles}" th:value="${r}" th:text="${r}"
+                                            th:selected="${user.role != null and user.role == r}">VOLUNTEER</option>
+                                </select>
+                            </div>
+
+                            <!-- Full Name -->
+                            <div class="mb-3">
+                                <label for="fullName" class="form-label fw-semibold">Full Name / Organization Name</label>
+                                <input type="text" class="form-control" id="fullName" name="fullName"
+                                       th:value="${user.fullName}" placeholder="Enter name" required>
+                            </div>
+
+                            <!-- Email -->
+                            <div class="mb-3">
+                                <label for="email" class="form-label fw-semibold">Email Address</label>
+                                <input type="email" class="form-control" id="email" name="email"
+                                       th:value="${user.email}" placeholder="user@gmail.com" required>
+                            </div>
+
+                            <!-- Password (Required on Create, Optional note on Edit) -->
+                            <div class="mb-3" th:if="${!isEdit}">
+                                <label for="password" class="form-label fw-semibold">Password</label>
+                                <input type="password" class="form-control" id="password" name="password"
+                                       placeholder="Create user password" required minlength="4">
+                            </div>
+
+                            <!-- Phone -->
+                            <div class="mb-3">
+                                <label for="phone" class="form-label fw-semibold">Phone Number</label>
+                                <input type="text" class="form-control" id="phone" name="phone"
+                                       th:value="${user.phone}" placeholder="+91 9999999999">
+                            </div>
+
+                            <!-- Organization Description -->
+                            <div class="mb-3" id="orgDescGroup">
+                                <label for="organizationDescription" class="form-label fw-semibold">Organization Description</label>
+                                <textarea class="form-control" id="organizationDescription" name="organizationDescription"
+                                          rows="3" th:text="${user.organizationDescription}"
+                                          placeholder="Mission and description (only applicable for ORGANIZATION role)..."></textarea>
+                            </div>
+
+                            <div class="d-flex justify-content-between align-items-center mt-4">
+                                <a th:href="@{/admin/users}" class="btn btn-outline-secondary">
+                                    <i class="bi bi-arrow-left me-1"></i> Cancel
+                                </a>
+                                <button type="submit" class="btn btn-primary px-4">
+                                    <i class="bi bi-check2 me-1"></i> <span th:text="${isEdit ? 'Update User' : 'Create User'}">Save</span>
+                                </button>
+                            </div>
+                        </form>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer Fragment -->
+    <div th:replace="~{fragments/layout :: footer}"></div>
+
+    <script>
+        function checkOrgRole() {
+            const roleSelect = document.getElementById('role');
+            const orgGroup = document.getElementById('orgDescGroup');
+            if (roleSelect.value === 'ORGANIZATION') {
+                orgGroup.style.display = 'block';
+            } else {
+                orgGroup.style.display = 'none';
+            }
+        }
+        document.addEventListener('DOMContentLoaded', checkOrgRole);
+    </script>
+</body>
+</html>

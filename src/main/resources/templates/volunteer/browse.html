@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: header('Browse Opportunities')}"></head>
+<body class="bg-light">
+
+    <!-- Navbar Fragment -->
+    <div th:replace="~{fragments/layout :: navbar}"></div>
+
+    <!-- Flash Alerts -->
+    <div th:replace="~{fragments/layout :: alerts}"></div>
+
+    <div class="container my-4">
+        <!-- Header -->
+        <div class="mb-4">
+            <span class="badge bg-primary-subtle text-primary fw-semibold px-2 py-1">Community Drives</span>
+            <h2 class="fw-bold mb-0">Browse Volunteering Opportunities</h2>
+            <p class="text-muted small">Explore verified community service initiatives and register to make a difference</p>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="card p-3 mb-4 bg-white shadow-sm">
+            <form th:action="@{/volunteer/browse}" method="get" class="row g-2 align-items-center">
+                <div class="col-md-9">
+                    <div class="input-group">
+                        <span class="input-group-text bg-light"><i class="bi bi-search"></i></span>
+                        <input type="text" class="form-control" name="search" th:value="${searchQuery}"
+                               placeholder="Search opportunities by title, keyword, or venue location...">
+                    </div>
+                </div>
+                <div class="col-md-3 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-search me-1"></i> Search
+                    </button>
+                    <a th:href="@{/volunteer/browse}" class="btn btn-outline-secondary">Reset</a>
+                </div>
+            </form>
+        </div>
+
+        <!-- Opportunities Grid -->
+        <div class="row g-4" th:if="${#lists.isEmpty(opportunityCards)}">
+            <div class="col-12">
+                <div class="card p-5 text-center bg-white shadow-sm">
+                    <i class="bi bi-calendar-x fs-1 text-muted mb-3"></i>
+                    <h5 class="fw-bold">No Opportunities Found</h5>
+                    <p class="text-muted mb-0">No upcoming approved events matched your search keywords. Try searching for a different keyword or reset filters.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4" th:unless="${#lists.isEmpty(opportunityCards)}">
+            <div class="col-md-6 col-lg-4" th:each="card : ${opportunityCards}">
+                <div class="card h-100 bg-white shadow-sm card-hover p-3">
+                    <div class="card-body d-flex flex-column">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <span class="badge bg-success-subtle text-success">
+                                <i class="bi bi-calendar-check me-1"></i> <span th:text="${card.opportunity.eventDate}">2026-10-15</span>
+                            </span>
+                            <!-- Remaining slots badge -->
+                            <span class="badge"
+                                  th:classappend="${card.remainingSlots > 0 ? 'bg-info-subtle text-info border' : 'bg-danger-subtle text-danger border'}">
+                                <i class="bi bi-person-fill me-1"></i>
+                                <span th:text="${card.remainingSlots}">10</span> Slots Left
+                            </span>
+                        </div>
+
+                        <h5 class="card-title fw-bold text-dark mt-2 mb-1" th:text="${card.opportunity.title}">Opportunity Title</h5>
+                        <div class="small text-muted mb-2">
+                            <i class="bi bi-building text-primary me-1"></i>
+                            <span class="fw-semibold text-secondary" th:text="${card.opportunity.organization.fullName}">Hosting Org</span>
+                        </div>
+
+                        <p class="text-muted small mb-3">
+                            <i class="bi bi-geo-alt-fill text-danger me-1"></i>
+                            <span th:text="${card.opportunity.location}">Location venue</span>
+                        </p>
+
+                        <p class="card-text text-secondary small flex-grow-1"
+                           th:text="${#strings.length(card.opportunity.description) > 120 ? #strings.substring(card.opportunity.description, 0, 120) + '...' : card.opportunity.description}">
+                            Description preview...
+                        </p>
+
+                        <div class="border-top pt-3 mt-3 d-flex justify-content-between align-items-center">
+                            <small class="text-muted">
+                                <i class="bi bi-clock me-1"></i>
+                                <span th:text="${card.opportunity.startTime + ' - ' + card.opportunity.endTime}">09:00 - 13:00</span>
+                            </small>
+                            <a th:href="@{'/volunteer/opportunity/' + ${card.opportunity.id}}" class="btn btn-sm btn-primary">
+                                View Details &amp; Sign Up <i class="bi bi-arrow-right ms-1"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Footer Fragment -->
+    <div th:replace="~{fragments/layout :: footer}"></div>
+
+</body>
+</html>

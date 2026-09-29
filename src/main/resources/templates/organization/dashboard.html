@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: header('Organization Dashboard')}"></head>
+<body class="bg-light">
+
+    <!-- Navbar Fragment -->
+    <div th:replace="~{fragments/layout :: navbar}"></div>
+
+    <!-- Flash Alerts -->
+    <div th:replace="~{fragments/layout :: alerts}"></div>
+
+    <div class="container my-4">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <span class="badge bg-info-subtle text-info fw-semibold px-2 py-1">Host Organization</span>
+                <h2 class="fw-bold mb-0" th:text="${currentUser.fullName}">Green Earth Foundation</h2>
+                <p class="text-muted small mb-0" th:if="${currentUser.organizationDescription}" th:text="${currentUser.organizationDescription}">
+                    Mission and focus areas
+                </p>
+            </div>
+            <div class="d-flex gap-2">
+                <a th:href="@{/org/opportunities/new}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle me-1"></i> Post New Event
+                </a>
+                <a th:href="@{/org/report}" class="btn btn-outline-secondary">
+                    <i class="bi bi-printer me-1"></i> Print Report
+                </a>
+            </div>
+        </div>
+
+        <!-- KPI Cards Grid -->
+        <div class="row g-3 mb-4">
+            <!-- Total Events -->
+            <div class="col-sm-6 col-lg-3">
+                <div class="card p-3 stat-card bg-white card-hover">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="stat-icon bg-primary-subtle text-primary">
+                            <i class="bi bi-calendar-event"></i>
+                        </div>
+                        <div>
+                            <h3 class="fw-bold mb-0" th:text="${totalOpportunities}">0</h3>
+                            <span class="text-muted small text-uppercase fw-semibold">My Events</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Approved Events -->
+            <div class="col-sm-6 col-lg-3">
+                <div class="card p-3 stat-card bg-white card-hover" style="border-left-color: #16a34a;">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="stat-icon bg-success-subtle text-success">
+                            <i class="bi bi-check2-circle"></i>
+                        </div>
+                        <div>
+                            <h3 class="fw-bold mb-0" th:text="${approvedOpportunities}">0</h3>
+                            <span class="text-muted small text-uppercase fw-semibold">Live Approved</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Total Registered Volunteers -->
+            <div class="col-sm-6 col-lg-3">
+                <div class="card p-3 stat-card bg-white card-hover" style="border-left-color: #0284c7;">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="stat-icon bg-info-subtle text-info">
+                            <i class="bi bi-people-fill"></i>
+                        </div>
+                        <div>
+                            <h3 class="fw-bold mb-0" th:text="${totalVolunteersRegistered}">0</h3>
+                            <span class="text-muted small text-uppercase fw-semibold">Volunteers Signed Up</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Approved Service Hours -->
+            <div class="col-sm-6 col-lg-3">
+                <div class="card p-3 stat-card bg-white card-hover" style="border-left-color: #8b5cf6;">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="stat-icon" style="background-color: #f3e8ff; color: #7e22ce;">
+                            <i class="bi bi-clock-history"></i>
+                        </div>
+                        <div>
+                            <h3 class="fw-bold mb-0" th:text="${#numbers.formatDecimal(totalApprovedHours, 1, 1)}">0.0</h3>
+                            <span class="text-muted small text-uppercase fw-semibold">Approved Hours</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Banners -->
+        <div class="row g-3 mb-4">
+            <!-- Pending Hour Approvals Notice -->
+            <div class="col-md-6" th:if="${pendingHoursCount > 0}">
+                <div class="card bg-warning-subtle text-warning-emphasis p-3 border-warning">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center gap-3">
+                            <i class="bi bi-exclamation-circle-fill fs-3 text-warning"></i>
+                            <div>
+                                <h6 class="fw-bold mb-0">Pending Hour Submissions</h6>
+                                <p class="small mb-0">You have <strong th:text="${pendingHoursCount}">0</strong> volunteer hour log(s) awaiting verification.</p>
+                            </div>
+                        </div>
+                        <a th:href="@{/org/hours}" class="btn btn-warning btn-sm fw-semibold">
+                            Review Now <i class="bi bi-arrow-right ms-1"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pending Opportunity Notice -->
+            <div class="col-md-6" th:if="${pendingOpportunities > 0}">
+                <div class="card bg-info-subtle text-info-emphasis p-3 border-info">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center gap-3">
+                            <i class="bi bi-clock-history fs-3 text-info"></i>
+                            <div>
+                                <h6 class="fw-bold mb-0">Events Under Review</h6>
+                                <p class="small mb-0"><strong th:text="${pendingOpportunities}">0</strong> event(s) currently being reviewed by Admin.</p>
+                            </div>
+                        </div>
+                        <a th:href="@{/org/opportunities}" class="btn btn-info btn-sm text-white fw-semibold">
+                            View Events <i class="bi bi-arrow-right ms-1"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Links Hub -->
+        <div class="card p-4 bg-white shadow-sm">
+            <h5 class="fw-bold mb-3">Quick Actions</h5>
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <a th:href="@{/org/opportunities/new}" class="card p-3 text-decoration-none border h-100 card-hover bg-light">
+                        <div class="fw-bold text-dark mb-1"><i class="bi bi-plus-circle text-primary me-2"></i>Create New Opportunity</div>
+                        <small class="text-muted">Post a new volunteering drive with date, slots, and responsibilities.</small>
+                    </a>
+                </div>
+                <div class="col-md-4">
+                    <a th:href="@{/org/opportunities}" class="card p-3 text-decoration-none border h-100 card-hover bg-light">
+                        <div class="fw-bold text-dark mb-1"><i class="bi bi-people text-info me-2"></i>Manage Rosters &amp; Attendance</div>
+                        <small class="text-muted">View registered volunteers and mark attendance on event day.</small>
+                    </a>
+                </div>
+                <div class="col-md-4">
+                    <a th:href="@{/messages}" class="card p-3 text-decoration-none border h-100 card-hover bg-light">
+                        <div class="fw-bold text-dark mb-1"><i class="bi bi-chat-dots text-success me-2"></i>Volunteer Direct Messages</div>
+                        <small class="text-muted">Communicate directly with volunteers who signed up for your events.</small>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Footer Fragment -->
+    <div th:replace="~{fragments/layout :: footer}"></div>
+
+</body>
+</html>

@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: header('Messages')}"></head>
+<body class="bg-light">
+
+    <!-- Navbar Fragment -->
+    <div th:replace="~{fragments/layout :: navbar}"></div>
+
+    <!-- Flash Alerts -->
+    <div th:replace="~{fragments/layout :: alerts}"></div>
+
+    <div class="container my-4">
+        <!-- Header -->
+        <div class="mb-4">
+            <span class="badge bg-primary-subtle text-primary fw-semibold px-2 py-1">Direct Communications</span>
+            <h2 class="fw-bold mb-0">Platform Messages</h2>
+            <p class="text-muted small">Communicate directly with registered volunteers and hosting organizations</p>
+        </div>
+
+        <div class="row g-3">
+            <!-- Left Side: Allowed Contacts List -->
+            <div class="col-md-4 col-lg-4">
+                <div class="card bg-white shadow-sm h-100">
+                    <div class="card-header bg-white py-3 border-bottom">
+                        <h6 class="fw-bold mb-0">
+                            <i class="bi bi-people me-2 text-primary"></i> Authorized Contacts
+                        </h6>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="list-group list-group-flush" th:if="${!#lists.isEmpty(contacts)}">
+                            <a th:each="contact : ${contacts}"
+                               th:href="@{'/messages?withUser=' + ${contact.id}}"
+                               class="list-group-item list-group-item-action py-3 px-3 border-bottom"
+                               th:classappend="${activeContact != null and activeContact.id == contact.id ? 'active bg-light text-dark fw-bold border-start border-4 border-primary' : ''}">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <span class="text-dark" th:text="${contact.fullName}">Contact Name</span>
+                                    <span class="badge"
+                                          th:classappend="${contact.role.name() == 'ORGANIZATION' ? 'bg-info-subtle text-info' : 'bg-success-subtle text-success'}"
+                                          th:text="${contact.role}">ROLE</span>
+                                </div>
+                                <div class="small text-muted text-truncate" th:text="${contact.email}">contact@gmail.com</div>
+                            </a>
+                        </div>
+
+                        <!-- Empty state if no registrations exist -->
+                        <div class="p-4 text-center text-muted" th:if="${#lists.isEmpty(contacts)}">
+                            <i class="bi bi-chat-square-text fs-2 d-block mb-2 text-secondary"></i>
+                            <h6 class="fw-semibold">No Contacts Yet</h6>
+                            <p class="small mb-0">
+                                Messaging is enabled once a volunteer registers for an organization's opportunity.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Side: Active Chat Window -->
+            <div class="col-md-8 col-lg-8">
+                <div class="card bg-white shadow-sm h-100 d-flex flex-column">
+
+                    <!-- Chat Header -->
+                    <div class="card-header bg-white py-3 border-bottom" th:if="${activeContact != null}">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="fw-bold mb-0 text-dark" th:text="${activeContact.fullName}">Recipient Name</h6>
+                                <small class="text-muted">
+                                    <span th:text="${activeContact.role}">ROLE</span> &bull; <span th:text="${activeContact.email}">email</span>
+                                </small>
+                            </div>
+                            <span class="badge bg-light text-secondary border">
+                                <i class="bi bi-shield-check me-1 text-success"></i> Connected via Event
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Chat Error Banner -->
+                    <div class="alert alert-danger m-3 mb-0" th:if="${chatError}" th:text="${chatError}"></div>
+
+                    <!-- Chat Messages Scroll Container -->
+                    <div class="card-body p-3 chat-box" id="chatContainer" th:if="${activeContact != null}">
+                        <div class="text-center py-4 text-muted small" th:if="${#lists.isEmpty(conversation)}">
+                            <i class="bi bi-chat-dots fs-3 d-block mb-2"></i>
+                            No messages exchanged yet. Send the first message below!
+                        </div>
+
+                        <div th:each="msg : ${conversation}" class="mb-3">
+                            <!-- Sent by current user -->
+                            <div th:if="${msg.sender.id == currentUser.id}" class="d-flex flex-column align-items-end">
+                                <div class="chat-bubble-sent shadow-sm" th:text="${msg.content}">
+                                    Sent message text
+                                </div>
+                                <small class="text-muted mt-1" style="font-size: 0.72rem;"
+                                       th:text="${#temporals.format(msg.sentAt, 'yyyy-MM-dd HH:mm')}">14:30</small>
+                            </div>
+
+                            <!-- Received from other user -->
+                            <div th:unless="${msg.sender.id == currentUser.id}" class="d-flex flex-column align-items-start">
+                                <div class="chat-bubble-received shadow-sm" th:text="${msg.content}">
+                                    Received message text
+                                </div>
+                                <small class="text-muted mt-1" style="font-size: 0.72rem;"
+                                       th:text="${#temporals.format(msg.sentAt, 'yyyy-MM-dd HH:mm')}">14:32</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Message Input Form -->
+                    <div class="card-footer bg-white p-3 border-top" th:if="${activeContact != null}">
+                        <form th:action="@{/messages/send}" method="post" class="d-flex gap-2">
+                            <input type="hidden" name="receiverId" th:value="${activeContact.id}">
+                            <textarea class="form-control" name="content" rows="2"
+                                      placeholder="Type your message here..." required autofocus></textarea>
+                            <button type="submit" class="btn btn-primary px-4 d-flex align-items-center">
+                                <i class="bi bi-send-fill fs-5"></i>
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Placeholder when no contact is selected -->
+                    <div class="card-body text-center py-5 my-auto text-muted" th:if="${activeContact == null}">
+                        <i class="bi bi-chat-left-dots fs-1 d-block mb-3 text-secondary"></i>
+                        <h5>Select a contact to view conversations</h5>
+                        <p class="small text-muted mb-0">Choose a contact from the list on the left to start messaging.</p>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Footer Fragment -->
+    <div th:replace="~{fragments/layout :: footer}"></div>
+
+    <script>
+        // Auto scroll chat box to the latest message
+        const chatBox = document.getElementById('chatContainer');
+        if (chatBox) {
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+    </script>
+</body>
+</html>

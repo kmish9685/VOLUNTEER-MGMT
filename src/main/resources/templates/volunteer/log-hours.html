@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: header('Log Volunteer Hours')}"></head>
+<body class="bg-light">
+
+    <!-- Navbar Fragment -->
+    <div th:replace="~{fragments/layout :: navbar}"></div>
+
+    <!-- Flash Alerts -->
+    <div th:replace="~{fragments/layout :: alerts}"></div>
+
+    <div class="container my-5">
+        <div class="row justify-content-center">
+            <div class="col-md-7 col-lg-6">
+                <div class="card p-4 bg-white shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center gap-3 mb-4">
+                            <div class="stat-icon bg-success-subtle text-success">
+                                <i class="bi bi-clock-history"></i>
+                            </div>
+                            <div>
+                                <h3 class="fw-bold mb-0">Log Service Hours</h3>
+                                <p class="text-muted small mb-0">Record your verified community contribution</p>
+                            </div>
+                        </div>
+
+                        <!-- Event Summary Box -->
+                        <div class="bg-light p-3 rounded mb-4">
+                            <h6 class="fw-bold text-dark mb-1" th:text="${registration.opportunity.title}">Workshop Event</h6>
+                            <div class="small text-muted mb-1">
+                                Hosted by: <strong th:text="${registration.opportunity.organization.fullName}">Helping Hands NGO</strong>
+                            </div>
+                            <div class="small text-muted">
+                                <i class="bi bi-calendar me-1"></i> Date: <span th:text="${registration.opportunity.eventDate}">2026-10-10</span> &bull;
+                                <span class="badge bg-success-subtle text-success ms-1">ATTENDED</span>
+                            </div>
+                        </div>
+
+                        <!-- Previous submission notice if exists -->
+                        <div th:if="${existingLog != null}" class="alert alert-info py-2 small mb-3">
+                            <i class="bi bi-info-circle me-1"></i>
+                            You previously submitted <strong th:text="${existingLog.hours}">4.0</strong> hours.
+                            Status: <strong th:text="${existingLog.status}">PENDING</strong>.
+                            Submitting this form will update your entry.
+                        </div>
+
+                        <!-- Form -->
+                        <form th:action="@{/volunteer/log-hours}" method="post">
+                            <input type="hidden" name="registrationId" th:value="${registration.id}">
+
+                            <!-- Hours Input -->
+                            <div class="mb-3">
+                                <label for="hoursInput" class="form-label fw-semibold">Hours Contributed</label>
+                                <div class="input-group">
+                                    <input type="number" step="0.5" min="0.5" th:max="${maxHoursAllowed}"
+                                           class="form-control" id="hoursInput" name="hours"
+                                           th:value="${existingLog != null ? existingLog.hours : 1.0}" required>
+                                    <span class="input-group-text bg-light">hours</span>
+                                </div>
+                                <small class="text-muted">
+                                    System limit: Maximum <strong th:text="${maxHoursAllowed}">12</strong> hours permitted per entry.
+                                </small>
+                            </div>
+
+                            <!-- Work Description -->
+                            <div class="mb-4">
+                                <label for="workDescription" class="form-label fw-semibold">Summary of Work Completed</label>
+                                <textarea class="form-control" id="workDescription" name="workDescription" rows="4"
+                                          placeholder="Describe the tasks, assistance, and community responsibilities you completed during this event..."
+                                          th:text="${existingLog != null ? existingLog.workDescription : ''}" required></textarea>
+                            </div>
+
+                            <div class="d-flex justify-content-between align-items-center">
+                                <a th:href="@{/volunteer/history}" class="btn btn-outline-secondary">
+                                    <i class="bi bi-arrow-left me-1"></i> Cancel
+                                </a>
+                                <button type="submit" class="btn btn-primary px-4 fw-semibold">
+                                    <i class="bi bi-check2-circle me-1"></i> Submit for Approval
+                                </button>
+                            </div>
+                        </form>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer Fragment -->
+    <div th:replace="~{fragments/layout :: footer}"></div>
+
+</body>
+</html>

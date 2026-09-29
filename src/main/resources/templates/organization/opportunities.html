@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: header('My Opportunities')}"></head>
+<body class="bg-light">
+
+    <!-- Navbar Fragment -->
+    <div th:replace="~{fragments/layout :: navbar}"></div>
+
+    <!-- Flash Alerts -->
+    <div th:replace="~{fragments/layout :: alerts}"></div>
+
+    <div class="container my-4">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <span class="badge bg-primary-subtle text-primary fw-semibold px-2 py-1">Event Management</span>
+                <h2 class="fw-bold mb-0">My Volunteering Opportunities</h2>
+            </div>
+            <a th:href="@{/org/opportunities/new}" class="btn btn-primary">
+                <i class="bi bi-plus-circle me-1"></i> Post New Event
+            </a>
+        </div>
+
+        <!-- Opportunities Table -->
+        <div class="card bg-white shadow-sm">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th scope="col">Event Title</th>
+                                <th scope="col">Date &amp; Time</th>
+                                <th scope="col">Location</th>
+                                <th scope="col">Capacity</th>
+                                <th scope="col">Review Status</th>
+                                <th scope="col" class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:if="${#lists.isEmpty(opportunities)}">
+                                <td colspan="6" class="text-center py-5 text-muted">
+                                    <i class="bi bi-calendar-x fs-2 d-block mb-2"></i>
+                                    You have not posted any opportunities yet.
+                                    <div class="mt-2">
+                                        <a th:href="@{/org/opportunities/new}" class="btn btn-sm btn-primary">Create Your First Event</a>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr th:each="opp : ${opportunities}">
+                                <td>
+                                    <div class="fw-bold text-dark" th:text="${opp.title}">Tree Plantation Drive</div>
+                                    <small class="text-danger" th:if="${opp.adminRemark}">
+                                        <i class="bi bi-info-circle me-1"></i><strong>Admin Remark:</strong> <span th:text="${opp.adminRemark}">Remark</span>
+                                    </small>
+                                </td>
+                                <td>
+                                    <div class="fw-semibold" th:text="${opp.eventDate}">2026-10-15</div>
+                                    <small class="text-muted" th:text="${opp.startTime + ' - ' + opp.endTime}">08:30 - 12:30</small>
+                                </td>
+                                <td>
+                                    <small class="text-secondary"><i class="bi bi-geo-alt me-1 text-danger"></i><span th:text="${opp.location}">City Gardens</span></small>
+                                </td>
+                                <td>
+                                    <span class="badge bg-light text-dark border">
+                                        <i class="bi bi-people me-1"></i> <span th:text="${opp.totalSlots}">25</span> Slots
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge"
+                                          th:classappend="${opp.status.name() == 'APPROVED' ? 'badge-approved' :
+                                                           (opp.status.name() == 'PENDING' ? 'badge-pending' : 'badge-rejected')}"
+                                          th:text="${opp.status}">APPROVED</span>
+                                </td>
+                                <td class="text-end">
+                                    <div class="btn-group btn-group-sm">
+                                        <!-- View Volunteer Roster & Attendance -->
+                                        <a th:href="@{'/org/volunteers/' + ${opp.id}}" class="btn btn-outline-info" title="Manage Volunteers &amp; Attendance">
+                                            <i class="bi bi-people-fill me-1"></i> Volunteers
+                                        </a>
+
+                                        <!-- Edit Event -->
+                                        <a th:href="@{'/org/opportunities/edit/' + ${opp.id}}" class="btn btn-outline-primary" title="Edit Event Details">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+
+                                        <!-- Delete Event -->
+                                        <form th:action="@{'/org/opportunities/delete/' + ${opp.id}}" method="post" class="d-inline">
+                                            <button type="submit" class="btn btn-outline-danger" title="Delete Event"
+                                                    onclick="return confirm('Are you sure you want to delete this opportunity?');">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Footer Fragment -->
+    <div th:replace="~{fragments/layout :: footer}"></div>
+
+</body>
+</html>

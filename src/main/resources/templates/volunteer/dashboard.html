@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: header('Volunteer Dashboard')}"></head>
+<body class="bg-light">
+
+    <!-- Navbar Fragment -->
+    <div th:replace="~{fragments/layout :: navbar}"></div>
+
+    <!-- Flash Alerts -->
+    <div th:replace="~{fragments/layout :: alerts}"></div>
+
+    <div class="container my-4">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <span class="badge bg-success-subtle text-success fw-semibold px-2 py-1">Community Contributor</span>
+                <h2 class="fw-bold mb-0">Welcome, <span th:text="${currentUser.fullName}">Rahul Verma</span>!</h2>
+                <p class="text-muted small mb-0">Track your volunteering commitments and verified community service credentials</p>
+            </div>
+            <a th:href="@{/volunteer/browse}" class="btn btn-primary">
+                <i class="bi bi-search me-1"></i> Browse Opportunities
+            </a>
+        </div>
+
+        <!-- KPI Metrics Grid -->
+        <div class="row g-3 mb-4">
+            <!-- Approved Hours -->
+            <div class="col-sm-4">
+                <div class="card p-3 stat-card bg-white card-hover" style="border-left-color: #16a34a;">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="stat-icon bg-success-subtle text-success">
+                            <i class="bi bi-award-fill"></i>
+                        </div>
+                        <div>
+                            <h3 class="fw-bold mb-0 text-success">
+                                <span th:text="${#numbers.formatDecimal(totalApprovedHours, 1, 1)}">0.0</span> hrs
+                            </h3>
+                            <span class="text-muted small text-uppercase fw-semibold">Verified Service Hours</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Events Registered -->
+            <div class="col-sm-4">
+                <div class="card p-3 stat-card bg-white card-hover">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="stat-icon bg-primary-subtle text-primary">
+                            <i class="bi bi-calendar-check"></i>
+                        </div>
+                        <div>
+                            <h3 class="fw-bold mb-0" th:text="${totalEventsRegistered}">0</h3>
+                            <span class="text-muted small text-uppercase fw-semibold">Upcoming Signups</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Events Attended -->
+            <div class="col-sm-4">
+                <div class="card p-3 stat-card bg-white card-hover" style="border-left-color: #0284c7;">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="stat-icon bg-info-subtle text-info">
+                            <i class="bi bi-check2-circle"></i>
+                        </div>
+                        <div>
+                            <h3 class="fw-bold mb-0" th:text="${totalEventsAttended}">0</h3>
+                            <span class="text-muted small text-uppercase fw-semibold">Completed Events</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Upcoming Registered Events -->
+        <div class="card bg-white shadow-sm mb-4">
+            <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+                <h5 class="fw-bold mb-0">
+                    <i class="bi bi-calendar-week text-primary me-2"></i> My Upcoming Volunteering Commitments
+                </h5>
+                <a th:href="@{/volunteer/history}" class="btn btn-sm btn-outline-secondary">
+                    View Full History <i class="bi bi-arrow-right ms-1"></i>
+                </a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th scope="col">Event Title</th>
+                                <th scope="col">Hosting Organization</th>
+                                <th scope="col">Date &amp; Time</th>
+                                <th scope="col">Location</th>
+                                <th scope="col" class="text-end">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:if="${#lists.isEmpty(upcomingRegistrations)}">
+                                <td colspan="5" class="text-center py-5 text-muted">
+                                    <i class="bi bi-calendar-plus fs-2 d-block mb-2"></i>
+                                    You have no upcoming event signups.
+                                    <div class="mt-2">
+                                        <a th:href="@{/volunteer/browse}" class="btn btn-sm btn-primary">Find an Opportunity to Join</a>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr th:each="reg : ${upcomingRegistrations}">
+                                <td>
+                                    <div class="fw-bold text-dark" th:text="${reg.opportunity.title}">Tree Plantation Drive</div>
+                                    <span class="badge bg-primary-subtle text-primary">Confirmed</span>
+                                </td>
+                                <td>
+                                    <span class="fw-semibold text-secondary" th:text="${reg.opportunity.organization.fullName}">Green Earth Foundation</span>
+                                </td>
+                                <td>
+                                    <div class="fw-semibold" th:text="${reg.opportunity.eventDate}">2026-10-15</div>
+                                    <small class="text-muted" th:text="${reg.opportunity.startTime + ' - ' + reg.opportunity.endTime}">08:30 - 12:30</small>
+                                </td>
+                                <td>
+                                    <small class="text-secondary"><i class="bi bi-geo-alt me-1 text-danger"></i><span th:text="${reg.opportunity.location}">Location</span></small>
+                                </td>
+                                <td class="text-end">
+                                    <div class="btn-group btn-group-sm">
+                                        <a th:href="@{'/volunteer/opportunity/' + ${reg.opportunity.id}}" class="btn btn-outline-primary">
+                                            Details
+                                        </a>
+                                        <form th:action="@{'/volunteer/cancel/' + ${reg.id}}" method="post" class="d-inline">
+                                            <button type="submit" class="btn btn-outline-danger"
+                                                    onclick="return confirm('Are you sure you want to cancel your registration for this event?');">
+                                                Cancel
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Footer Fragment -->
+    <div th:replace="~{fragments/layout :: footer}"></div>
+
+</body>
+</html>

@@ -1,0 +1,259 @@
+package com.volunteer.platform.controller;
+
+import com.volunteer.platform.model.*;
+import com.volunteer.platform.service.HourLogService;
+import com.volunteer.platform.service.OpportunityService;
+import com.volunteer.platform.service.RegistrationService;
+import jakarta.servlet.http.HttpSession;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * =====================================================================
+ * OrganizationController (Presentation Layer)
+ * ---------------------------------------------------------------------
+ * Handles all actions for hosting Organizations (/org/**):
+ * - Org Dashboard with event status metrics and approved hours
+ * - Opportunity CRUD (Post, Edit, Delete events)
+ * - Volunteer Attendance Marking (ATTENDED / ABSENT on/after event date)
+ * - Volunteer Hour Log Review & Approvals
+ * - Participation Summary Report with printable view
+ * =====================================================================
+ */
+@Controller
+@RequestMapping("/org")
+public class OrganizationController {
+
+    private final OpportunityService opportunityService;
+    private final RegistrationService registrationService;
+    private final HourLogService hourLogService;
+
+    /**
+     * Injects OpportunityService, RegistrationService, and HourLogService.
+     */
+    public OrganizationController(OpportunityService opportunityService,
+                                  RegistrationService registrationService,
+                                  HourLogService hourLogService) {
+        this.opportunityService = opportunityService;
+        this.registrationService = registrationService;
+        this.hourLogService = hourLogService;
+    }
+
+    /**
+     * Displays the Organization Dashboard with KPI cards and pending action counters.
+     */
+    @GetMapping("/dashboard")
+    public String showDashboard(HttpSession session, Model model) {
+        User org = (User) session.getAttribute("loggedInUser");
+        model.addAttribute("totalOpportunities", opportunityService.countByOrganization(org));
+        model.addAttribute("approvedOpportunities", opportunityService.countByOrganizationAndStatus(org, OpportunityStatus.APPROVED));
+        model.addAttribute("pendingOpportunities", opportunityService.countByOrganizationAndStatus(org, OpportunityStatus.PENDING));
+        model.addAttribute("rejectedOpportunities", opportunityService.countByOrganizationAndStatus(org, OpportunityStatus.REJECTED));
+        model.addAttribute("totalVolunteersRegistered", registrationService.countByOrganization(org));
+        model.addAttribute("totalApprovedHours", hourLogService.getTotalApprovedHoursForOrganization(org));
+        model.addAttribute("pendingHoursCount", hourLogService.countPendingHoursForOrganization(org));
+        return "organization/dashboard";
+    }
+
+    /**
+     * Lists all opportunities created by this organization.
+     */
+    @GetMapping("/opportunities")
+    public String listOpportunities(HttpSession session, Model model) {
+        User org = (User) session.getAttribute("loggedInUser");
+        model.addAttribute("opportunities", opportunityService.getOpportunitiesByOrganization(org));
+        return "organization/opportunities";
+    }
+
+    /**
+     * Displays the form to create a new volunteering opportunity.
+     */
+    @GetMapping("/opportunities/new")
+    public String showCreateOpportunityForm(Model model) {
+        model.addAttribute("opportunity", new Opportunity());
+        model.addAttribute("isEdit", false);
+        return "organization/opportunity-form";
+    }
+
+    /**
+     * Processes creation of a new opportunity.
+     */
+    @PostMapping("/opportunities/new")
+    public String processCreateOpportunity(@ModelAttribute("opportunity") Opportunity opportunity,
+                                           HttpSession session,
+                                           RedirectAttributes redirectAttributes) {
+        try {
+            User org = (User) session.getAttribute("loggedInUser");
+            opportunityService.createOpportunity(opportunity, org);
+            redirectAttributes.addFlashAttribute("successMessage", "Opportunity submitted successfully!");
+            return "redirect:/org/opportunities";
+        } catch (Exception ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+            return "redirect:/org/opportunities/new";
+        }
+    }
+
+    /**
+     * Displays the form to edit an existing opportunity.
+     */
+    @GetMapping("/opportunities/edit/{id}")
+    public String showEditOpportunityForm(@PathVariable("id") Long id,
+                                          HttpSession session,
+                                          Model model,
+                                          RedirectAttributes redirectAttributes) {
+        User org = (User) session.getAttribute("loggedInUser");
+        return opportunityService.findById(id).map(opp -> {
+            if (!opp.getOrganization().getId().equals(org.getId())) {
+                redirectAttributes.addFlashAttribute("errorMessage", "Access denied.");
+                return "redirect:/org/opportunities";
+            }
+            model.addAttribute("opportunity", opp);
+            model.addAttribute("isEdit", true);
+            return "organization/opportunity-form";
+        }).orElseGet(() -> {
+            redirectAttributes.addFlashAttribute("errorMessage", "Opportunity not found.");
+            return "redirect:/org/opportunities";
+        });
+    }
+
+    /**
+     * Processes updates to an existing opportunity.
+     */
+    @PostMapping("/opportunities/edit/{id}")
+    public String processEditOpportunity(@PathVariable("id") Long id,
+                                         @ModelAttribute("opportunity") Opportunity updatedOpp,
+                                         HttpSession session,
+                                         RedirectAttributes redirectAttributes) {
+        try {
+            User org = (User) session.getAttribute("loggedInUser");
+            opportunityService.updateOpportunity(id, updatedOpp, org);
+            redirectAttributes.addFlashAttribute("successMessage", "Opportunity updated successfully!");
+            return "redirect:/org/opportunities";
+        } catch (Exception ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+            return "redirect:/org/opportunities/edit/" + id;
+        }
+    }
+
+    /**
+     * Deletes an opportunity belonging to this organization.
+     */
+    @PostMapping("/opportunities/delete/{id}")
+    public String deleteOpportunity(@PathVariable("id") Long id,
+                                    HttpSession session,
+                                    RedirectAttributes redirectAttributes) {
+        try {
+            User org = (User) session.getAttribute("loggedInUser");
+            opportunityService.deleteOpportunity(id, org);
+            redirectAttributes.addFlashAttribute("successMessage", "Opportunity deleted successfully.");
+        } catch (Exception ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+        }
+        return "redirect:/org/opportunities";
+    }
+
+    /**
+     * Displays the roster of registered volunteers for an opportunity to mark attendance.
+     */
+    @GetMapping("/volunteers/{opportunityId}")
+    public String showRegisteredVolunteers(@PathVariable("opportunityId") Long opportunityId,
+                                           HttpSession session,
+                                           Model model,
+                                           RedirectAttributes redirectAttributes) {
+        User org = (User) session.getAttribute("loggedInUser");
+        return opportunityService.findById(opportunityId).map(opp -> {
+            if (!opp.getOrganization().getId().equals(org.getId())) {
+                redirectAttributes.addFlashAttribute("errorMessage", "Access denied.");
+                return "redirect:/org/opportunities";
+            }
+            model.addAttribute("opportunity", opp);
+            model.addAttribute("registrations", registrationService.getRegistrationsByOpportunity(opp));
+            model.addAttribute("isEventPastOrToday", !opp.getEventDate().isAfter(LocalDate.now()));
+            return "organization/volunteers";
+        }).orElseGet(() -> {
+            redirectAttributes.addFlashAttribute("errorMessage", "Opportunity not found.");
+            return "redirect:/org/opportunities";
+        });
+    }
+
+    /**
+     * Marks a volunteer's attendance as ATTENDED or ABSENT.
+     */
+    @PostMapping("/attendance/mark")
+    public String markAttendance(@RequestParam("registrationId") Long registrationId,
+                                 @RequestParam("opportunityId") Long opportunityId,
+                                 @RequestParam("status") RegistrationStatus status,
+                                 HttpSession session,
+                                 RedirectAttributes redirectAttributes) {
+        try {
+            User org = (User) session.getAttribute("loggedInUser");
+            registrationService.markAttendance(registrationId, status, org);
+            redirectAttributes.addFlashAttribute("successMessage", "Attendance updated successfully.");
+        } catch (Exception ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+        }
+        return "redirect:/org/volunteers/" + opportunityId;
+    }
+
+    /**
+     * Displays pending hour log submissions from volunteers awaiting organization review.
+     */
+    @GetMapping("/hours")
+    public String showHourApprovals(HttpSession session, Model model) {
+        User org = (User) session.getAttribute("loggedInUser");
+        model.addAttribute("pendingHours", hourLogService.getPendingHoursForOrganization(org));
+        return "organization/hours";
+    }
+
+    /**
+     * Processes organization's decision to APPROVE or REJECT a volunteer's logged hours.
+     */
+    @PostMapping("/hours/review/{id}")
+    public String reviewHours(@PathVariable("id") Long hourLogId,
+                              @RequestParam("status") HourLogStatus status,
+                              HttpSession session,
+                              RedirectAttributes redirectAttributes) {
+        try {
+            User org = (User) session.getAttribute("loggedInUser");
+            hourLogService.reviewHours(hourLogId, status, org);
+            redirectAttributes.addFlashAttribute("successMessage", "Hour submission " + status + " successfully.");
+        } catch (Exception ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+        }
+        return "redirect:/org/hours";
+    }
+
+    /**
+     * Generates a comprehensive participation summary report per event with printable view.
+     */
+    @GetMapping("/report")
+    public String showParticipationReport(HttpSession session, Model model) {
+        User org = (User) session.getAttribute("loggedInUser");
+        List<Opportunity> opportunities = opportunityService.getOpportunitiesByOrganization(org);
+
+        List<Map<String, Object>> reportRows = new ArrayList<>();
+        for (Opportunity opp : opportunities) {
+            Map<String, Object> row = new HashMap<>();
+            row.put("opportunity", opp);
+            row.put("totalSlots", opp.getTotalSlots());
+            row.put("registeredCount", registrationService.countByOpportunityAndStatus(opp, RegistrationStatus.REGISTERED)
+                    + registrationService.countByOpportunityAndStatus(opp, RegistrationStatus.ATTENDED)
+                    + registrationService.countByOpportunityAndStatus(opp, RegistrationStatus.ABSENT));
+            row.put("attendedCount", registrationService.countByOpportunityAndStatus(opp, RegistrationStatus.ATTENDED));
+            row.put("absentCount", registrationService.countByOpportunityAndStatus(opp, RegistrationStatus.ABSENT));
+            row.put("approvedHours", hourLogService.getTotalApprovedHoursForOpportunity(opp));
+            reportRows.add(row);
+        }
+
+        model.addAttribute("reportRows", reportRows);
+        return "organization/report";
+    }
+}

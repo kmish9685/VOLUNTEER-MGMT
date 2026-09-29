@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: header('Opportunity Details')}"></head>
+<body class="bg-light">
+
+    <!-- Navbar Fragment -->
+    <div th:replace="~{fragments/layout :: navbar}"></div>
+
+    <!-- Flash Alerts -->
+    <div th:replace="~{fragments/layout :: alerts}"></div>
+
+    <div class="container my-5">
+        <div class="row g-4 justify-content-center">
+            <div class="col-lg-8">
+                <!-- Main Opportunity Card -->
+                <div class="card p-4 bg-white shadow-sm mb-4">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <span class="badge bg-success-subtle text-success fw-semibold px-2 py-1 mb-2">Verified Initiative</span>
+                            <h2 class="fw-bold mb-1" th:text="${opportunity.title}">Community Tree Plantation Drive</h2>
+                            <p class="text-muted small mb-0">
+                                Hosted by <strong class="text-dark" th:text="${opportunity.organization.fullName}">Green Earth Foundation</strong>
+                            </p>
+                        </div>
+                        <a th:href="@{/volunteer/browse}" class="btn btn-outline-secondary btn-sm">
+                            <i class="bi bi-arrow-left me-1"></i> Back to Browse
+                        </a>
+                    </div>
+
+                    <div class="bg-light p-3 rounded mb-4">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <i class="bi bi-geo-alt-fill text-danger me-2"></i>
+                                <strong>Location:</strong> <span th:text="${opportunity.location}">City Gardens</span>
+                            </div>
+                            <div class="col-md-6">
+                                <i class="bi bi-calendar-check-fill text-primary me-2"></i>
+                                <strong>Date:</strong> <span th:text="${opportunity.eventDate}">2026-10-15</span>
+                            </div>
+                            <div class="col-md-6">
+                                <i class="bi bi-clock-fill text-info me-2"></i>
+                                <strong>Timing:</strong> <span th:text="${opportunity.startTime + ' - ' + opportunity.endTime}">08:30 - 12:30</span>
+                            </div>
+                            <div class="col-md-6">
+                                <i class="bi bi-people-fill text-success me-2"></i>
+                                <strong>Available Slots:</strong>
+                                <span class="badge" th:classappend="${remainingSlots > 0 ? 'bg-success' : 'bg-danger'}"
+                                      th:text="${remainingSlots + ' of ' + opportunity.totalSlots + ' remaining'}">10 of 25</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h5 class="fw-bold mb-2">About This Opportunity</h5>
+                    <p class="text-secondary" style="white-space: pre-line;" th:text="${opportunity.description}">
+                        Full opportunity details and responsibilities...
+                    </p>
+
+                    <!-- Sign Up / Status Bar -->
+                    <div class="border-top pt-4 mt-4">
+                        <!-- Case 1: Already Registered -->
+                        <div th:if="${isRegistered}" class="alert alert-success d-flex justify-content-between align-items-center mb-0">
+                            <div>
+                                <i class="bi bi-check-circle-fill me-2 fs-5"></i>
+                                <strong>You are registered for this event!</strong>
+                            </div>
+                            <a th:href="@{'/messages?withUser=' + ${opportunity.organization.id}}" class="btn btn-outline-success btn-sm">
+                                <i class="bi bi-chat-dots me-1"></i> Message Organization
+                            </a>
+                        </div>
+
+                        <!-- Case 2: Past Event -->
+                        <div th:if="${!isRegistered and isPastEvent}" class="alert alert-secondary mb-0">
+                            <i class="bi bi-exclamation-circle me-2"></i>
+                            This opportunity has already concluded. Registrations are closed.
+                        </div>
+
+                        <!-- Case 3: Fully Booked -->
+                        <div th:if="${!isRegistered and !isPastEvent and remainingSlots <= 0}" class="alert alert-warning mb-0">
+                            <i class="bi bi-people me-2"></i>
+                            This event has reached its maximum volunteer capacity.
+                        </div>
+
+                        <!-- Case 4: Eligible to Sign Up -->
+                        <div th:if="${!isRegistered and !isPastEvent and remainingSlots > 0}" class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="fw-bold mb-0">Ready to make an impact?</h6>
+                                <small class="text-muted">Reserve your volunteer slot now.</small>
+                            </div>
+                            <form th:action="@{'/volunteer/signup/' + ${opportunity.id}}" method="post">
+                                <button type="submit" class="btn btn-primary px-4 py-2 fw-semibold shadow-sm"
+                                        onclick="return confirm('Confirm your volunteer registration for this event?');">
+                                    <i class="bi bi-check2-circle me-1"></i> Sign Up Now
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hosting Organization Card -->
+                <div class="card p-4 bg-white shadow-sm border-start border-4 border-info">
+                    <h5 class="fw-bold mb-2">About the Host Organization</h5>
+                    <h6 class="text-primary fw-bold" th:text="${opportunity.organization.fullName}">Organization Name</h6>
+                    <p class="text-secondary small mb-2" th:if="${opportunity.organization.organizationDescription}"
+                       th:text="${opportunity.organization.organizationDescription}">
+                        Organization mission statement and focus areas.
+                    </p>
+                    <div class="small text-muted">
+                        <i class="bi bi-envelope me-1"></i> <span th:text="${opportunity.organization.email}">org@gmail.com</span>
+                        <span th:if="${opportunity.organization.phone}" class="ms-3">
+                            <i class="bi bi-telephone me-1"></i> <span th:text="${opportunity.organization.phone}">+91 9999999999</span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer Fragment -->
+    <div th:replace="~{fragments/layout :: footer}"></div>
+
+</body>
+</html>

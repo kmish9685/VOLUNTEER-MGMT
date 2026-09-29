@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: header('Hour Approvals')}"></head>
+<body class="bg-light">
+
+    <!-- Navbar Fragment -->
+    <div th:replace="~{fragments/layout :: navbar}"></div>
+
+    <!-- Flash Alerts -->
+    <div th:replace="~{fragments/layout :: alerts}"></div>
+
+    <div class="container my-4">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <span class="badge bg-warning-subtle text-warning-emphasis fw-semibold px-2 py-1">Verification Queue</span>
+                <h2 class="fw-bold mb-0">Volunteer Hour Approvals</h2>
+                <p class="text-muted small mb-0">Verify and approve service hours submitted by volunteers who attended your events</p>
+            </div>
+            <a th:href="@{/org/report}" class="btn btn-outline-secondary">
+                <i class="bi bi-file-earmark-bar-graph me-1"></i> Participation Report
+            </a>
+        </div>
+
+        <!-- Pending Hours Table -->
+        <div class="card bg-white shadow-sm">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th scope="col">Volunteer</th>
+                                <th scope="col">Event</th>
+                                <th scope="col">Claimed Hours</th>
+                                <th scope="col">Work Completed</th>
+                                <th scope="col">Logged Date</th>
+                                <th scope="col" class="text-end">Verification</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:if="${#lists.isEmpty(pendingHours)}">
+                                <td colspan="6" class="text-center py-5 text-muted">
+                                    <i class="bi bi-check2-circle fs-2 d-block mb-2 text-success"></i>
+                                    All submitted volunteer hours have been reviewed! No pending entries.
+                                </td>
+                            </tr>
+                            <tr th:each="log : ${pendingHours}">
+                                <td>
+                                    <div class="fw-bold text-dark" th:text="${log.registration.volunteer.fullName}">Priya Sharma</div>
+                                    <small class="text-muted" th:text="${log.registration.volunteer.email}">priya@gmail.com</small>
+                                </td>
+                                <td>
+                                    <div class="fw-semibold text-dark" th:text="${log.registration.opportunity.title}">Workshop</div>
+                                    <small class="text-muted" th:text="${log.registration.opportunity.eventDate}">2026-10-15</small>
+                                </td>
+                                <td>
+                                    <span class="badge bg-primary-subtle text-primary fs-6 px-2 py-1">
+                                        <i class="bi bi-clock me-1"></i><span th:text="${log.hours}">4.0</span> hrs
+                                    </span>
+                                </td>
+                                <td>
+                                    <small class="text-secondary" th:text="${log.workDescription}">Assisted senior citizens...</small>
+                                </td>
+                                <td class="text-muted small" th:text="${#temporals.format(log.loggedAt, 'yyyy-MM-dd HH:mm')}">
+                                    2026-09-28 14:00
+                                </td>
+                                <td class="text-end">
+                                    <div class="btn-group btn-group-sm">
+                                        <!-- Approve Form -->
+                                        <form th:action="@{'/org/hours/review/' + ${log.id}}" method="post" class="d-inline">
+                                            <input type="hidden" name="status" value="APPROVED">
+                                            <button type="submit" class="btn btn-success"
+                                                    onclick="return confirm('Approve these volunteer service hours?');">
+                                                <i class="bi bi-check-lg me-1"></i> Approve
+                                            </button>
+                                        </form>
+
+                                        <!-- Reject Form -->
+                                        <form th:action="@{'/org/hours/review/' + ${log.id}}" method="post" class="d-inline">
+                                            <input type="hidden" name="status" value="REJECTED">
+                                            <button type="submit" class="btn btn-outline-danger"
+                                                    onclick="return confirm('Reject this hour submission?');">
+                                                <i class="bi bi-x-lg me-1"></i> Reject
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Footer Fragment -->
+    <div th:replace="~{fragments/layout :: footer}"></div>
+
+</body>
+</html>

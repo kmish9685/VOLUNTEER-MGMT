@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: header('Manage Users')}"></head>
+<body class="bg-light">
+
+    <!-- Navbar Fragment -->
+    <div th:replace="~{fragments/layout :: navbar}"></div>
+
+    <!-- Flash Alerts -->
+    <div th:replace="~{fragments/layout :: alerts}"></div>
+
+    <div class="container my-4">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <span class="badge bg-primary-subtle text-primary fw-semibold px-2 py-1">User Directory</span>
+                <h2 class="fw-bold mb-0">Platform User Management</h2>
+            </div>
+            <a th:href="@{/admin/users/new}" class="btn btn-primary">
+                <i class="bi bi-person-plus-fill me-1"></i> Create New User
+            </a>
+        </div>
+
+        <!-- Search and Filter Bar -->
+        <div class="card p-3 mb-4 bg-white shadow-sm">
+            <form th:action="@{/admin/users}" method="get" class="row g-2 align-items-center">
+                <div class="col-md-5">
+                    <div class="input-group">
+                        <span class="input-group-text bg-light"><i class="bi bi-search"></i></span>
+                        <input type="text" class="form-control" name="search" th:value="${searchQuery}"
+                               placeholder="Search by full name or email...">
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <select class="form-select" name="role">
+                        <option value="" th:selected="${selectedRole == null}">All Roles (Volunteer, Org, Admin)</option>
+                        <option value="VOLUNTEER" th:selected="${selectedRole != null and selectedRole.name() == 'VOLUNTEER'}">Volunteers Only</option>
+                        <option value="ORGANIZATION" th:selected="${selectedRole != null and selectedRole.name() == 'ORGANIZATION'}">Organizations Only</option>
+                        <option value="ADMIN" th:selected="${selectedRole != null and selectedRole.name() == 'ADMIN'}">Admins Only</option>
+                    </select>
+                </div>
+                <div class="col-md-3 d-flex gap-2">
+                    <button type="submit" class="btn btn-outline-primary w-100">
+                        <i class="bi bi-funnel me-1"></i> Filter
+                    </button>
+                    <a th:href="@{/admin/users}" class="btn btn-outline-secondary">Reset</a>
+                </div>
+            </form>
+        </div>
+
+        <!-- Users Table -->
+        <div class="card bg-white shadow-sm">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th scope="col">Name &amp; Contact</th>
+                                <th scope="col">Role</th>
+                                <th scope="col">Status</th>
+                                <th scope="col">Joined Date</th>
+                                <th scope="col" class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:if="${#lists.isEmpty(users)}">
+                                <td colspan="5" class="text-center py-4 text-muted">No users matched your search criteria.</td>
+                            </tr>
+                            <tr th:each="user : ${users}">
+                                <td>
+                                    <div class="fw-bold" th:text="${user.fullName}">User Full Name</div>
+                                    <div class="small text-muted">
+                                        <i class="bi bi-envelope me-1"></i><span th:text="${user.email}">user@gmail.com</span>
+                                        <span th:if="${user.phone}" class="ms-2">
+                                            <i class="bi bi-telephone me-1"></i><span th:text="${user.phone}">+91 9999999999</span>
+                                        </span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge"
+                                          th:classappend="${user.role.name() == 'ADMIN' ? 'bg-danger-subtle text-danger' :
+                                                           (user.role.name() == 'ORGANIZATION' ? 'bg-info-subtle text-info' : 'bg-success-subtle text-success')}"
+                                          th:text="${user.role}">VOLUNTEER</span>
+                                </td>
+                                <td>
+                                    <span class="badge"
+                                          th:classappend="${user.status.name() == 'ACTIVE' ? 'badge-active' : 'badge-blocked'}"
+                                          th:text="${user.status}">ACTIVE</span>
+                                </td>
+                                <td class="text-muted small" th:text="${#temporals.format(user.createdAt, 'yyyy-MM-dd')}">
+                                    2026-09-01
+                                </td>
+                                <td class="text-end">
+                                    <div class="btn-group btn-group-sm">
+                                        <!-- Edit User -->
+                                        <a th:href="@{'/admin/users/edit/' + ${user.id}}" class="btn btn-outline-primary" title="Edit User">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+
+                                        <!-- Toggle Block/Unblock -->
+                                        <form th:action="@{'/admin/users/toggle-status/' + ${user.id}}" method="post" class="d-inline"
+                                              th:if="${currentUser.id != user.id}">
+                                            <button type="submit" class="btn"
+                                                    th:classappend="${user.status.name() == 'ACTIVE' ? 'btn-outline-warning' : 'btn-outline-success'}"
+                                                    th:title="${user.status.name() == 'ACTIVE' ? 'Block User' : 'Unblock User'}"
+                                                    onclick="return confirm('Are you sure you want to change this user\'s access status?');">
+                                                <i th:class="${user.status.name() == 'ACTIVE' ? 'bi bi-slash-circle' : 'bi bi-check-circle'}"></i>
+                                            </button>
+                                        </form>
+
+                                        <!-- Delete User -->
+                                        <form th:action="@{'/admin/users/delete/' + ${user.id}}" method="post" class="d-inline"
+                                              th:if="${currentUser.id != user.id}">
+                                            <button type="submit" class="btn btn-outline-danger" title="Delete User"
+                                                    onclick="return confirm('Are you sure you want to permanently delete this user account?');">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                    <span th:if="${currentUser.id == user.id}" class="badge bg-light text-secondary border ms-1">
+                                        (You)
+                                    </span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Footer Fragment -->
+    <div th:replace="~{fragments/layout :: footer}"></div>
+
+</body>
+</html>

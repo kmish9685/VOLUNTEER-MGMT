@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: header('Participation History')}"></head>
+<body class="bg-light">
+
+    <!-- Navbar Fragment -->
+    <div th:replace="~{fragments/layout :: navbar}"></div>
+
+    <!-- Flash Alerts -->
+    <div th:replace="~{fragments/layout :: alerts}"></div>
+
+    <div class="container my-4">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <span class="badge bg-primary-subtle text-primary fw-semibold px-2 py-1">Service Transcript</span>
+                <h2 class="fw-bold mb-0">My Volunteering History &amp; Hours</h2>
+                <p class="text-muted small mb-0">View all your registered events, attendance records, and verified service credentials</p>
+            </div>
+            <div class="text-end">
+                <span class="badge bg-success-subtle text-success fs-6 px-3 py-2 border border-success-subtle">
+                    <i class="bi bi-award-fill me-1"></i> Total Approved:
+                    <strong th:text="${#numbers.formatDecimal(totalApprovedHours, 1, 1)}">0.0</strong> hrs
+                </span>
+            </div>
+        </div>
+
+        <!-- History Table -->
+        <div class="card bg-white shadow-sm">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th scope="col">Event &amp; Organization</th>
+                                <th scope="col">Date</th>
+                                <th scope="col">Attendance Status</th>
+                                <th scope="col">Service Hours</th>
+                                <th scope="col" class="text-end">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:if="${#lists.isEmpty(historyRows)}">
+                                <td colspan="5" class="text-center py-5 text-muted">
+                                    <i class="bi bi-journal-x fs-2 d-block mb-2"></i>
+                                    You have not registered for any opportunities yet.
+                                    <div class="mt-2">
+                                        <a th:href="@{/volunteer/browse}" class="btn btn-sm btn-primary">Browse Opportunities</a>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr th:each="row : ${historyRows}">
+                                <td>
+                                    <div class="fw-bold text-dark" th:text="${row.registration.opportunity.title}">Event Title</div>
+                                    <div class="small text-muted">
+                                        <i class="bi bi-building me-1 text-primary"></i>
+                                        <span th:text="${row.registration.opportunity.organization.fullName}">Green Earth Foundation</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="fw-semibold" th:text="${row.registration.opportunity.eventDate}">2026-10-15</span>
+                                </td>
+                                <td>
+                                    <span class="badge"
+                                          th:classappend="${row.registration.status.name() == 'ATTENDED' ? 'bg-success-subtle text-success' :
+                                                           (row.registration.status.name() == 'REGISTERED' ? 'bg-primary-subtle text-primary' :
+                                                           (row.registration.status.name() == 'ABSENT' ? 'bg-warning-subtle text-warning-emphasis' : 'bg-danger-subtle text-danger'))}"
+                                          th:text="${row.registration.status}">REGISTERED</span>
+                                </td>
+                                <td>
+                                    <!-- If hours have been logged -->
+                                    <div th:if="${row.hourLog != null}">
+                                        <div class="fw-bold text-dark">
+                                            <span th:text="${row.hourLog.hours}">4.0</span> hrs
+                                        </div>
+                                        <span class="badge"
+                                              th:classappend="${row.hourLog.status.name() == 'APPROVED' ? 'badge-approved' :
+                                                               (row.hourLog.status.name() == 'PENDING' ? 'badge-pending' : 'badge-rejected')}"
+                                              th:text="${row.hourLog.status}">APPROVED</span>
+                                    </div>
+                                    <div th:unless="${row.hourLog != null}">
+                                        <span class="text-muted small">Not submitted</span>
+                                    </div>
+                                </td>
+                                <td class="text-end">
+                                    <!-- Option to log hours if marked ATTENDED -->
+                                    <div th:if="${row.registration.status.name() == 'ATTENDED'}">
+                                        <a th:href="@{'/volunteer/log-hours/' + ${row.registration.id}}" class="btn btn-sm btn-outline-success">
+                                            <i class="bi bi-pencil-square me-1"></i>
+                                            <span th:text="${row.hourLog != null ? 'Edit Hours' : 'Log Hours'}">Log Hours</span>
+                                        </a>
+                                    </div>
+
+                                    <!-- Option to cancel if upcoming registered -->
+                                    <div th:if="${row.registration.status.name() == 'REGISTERED'}">
+                                        <form th:action="@{'/volunteer/cancel/' + ${row.registration.id}}" method="post" class="d-inline">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger"
+                                                    onclick="return confirm('Cancel this registration?');">
+                                                Cancel Signup
+                                            </button>
+                                        </form>
+                                    </div>
+
+                                    <div th:if="${row.registration.status.name() == 'ABSENT' or row.registration.status.name() == 'CANCELLED'}">
+                                        <span class="text-muted small">&mdash;</span>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Footer Fragment -->
+    <div th:replace="~{fragments/layout :: footer}"></div>
+
+</body>
+</html>
