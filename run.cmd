@@ -1,8 +1,8 @@
 @echo off
 :: ============================================================
-:: VolunteerHub - Run with MySQL (main database)
-:: Make sure MySQL is running and the username/password in
-:: src\main\resources\application.properties are correct.
+:: VolunteerHub - Run with Supabase PostgreSQL (main database)
+:: Make sure db-secret.properties in the project root has your
+:: Supabase host, username, and password filled in.
 :: ============================================================
 
 if "%JAVA_HOME%"=="" (
@@ -12,7 +12,7 @@ if "%JAVA_HOME%"=="" (
 )
 
 echo ==========================================================
-echo  Starting VolunteerHub with MySQL database...
+echo  Starting VolunteerHub with Supabase (PostgreSQL)...
 echo  Open your browser at: http://localhost:8080/
 echo  Press Ctrl+C to stop the server.
 echo ==========================================================

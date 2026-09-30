@@ -13,7 +13,7 @@ import java.time.LocalTime;
  * Organization. It has a review lifecycle (PENDING -> APPROVED / REJECTED)
  * before volunteers can view and register for it.
  *
- * Stored in the "opportunities" table in MySQL.
+ * Stored in the "opportunities" table in PostgreSQL (Supabase).
  * =====================================================================
  */
 @Entity

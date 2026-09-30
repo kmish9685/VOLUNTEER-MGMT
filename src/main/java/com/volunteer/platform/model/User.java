@@ -12,11 +12,12 @@ import java.time.LocalDateTime;
  * - ORGANIZATION: Hosts volunteering opportunities, verifies attendance & hours.
  * - VOLUNTEER: Browses opportunities, attends events, and logs hours.
  *
- * Stored in the "users" table in MySQL.
+ * Stored in the "app_users" table in PostgreSQL (Supabase).
+ * Note: "users" is a reserved word in PostgreSQL, so the table is named "app_users".
  * =====================================================================
  */
 @Entity
-@Table(name = "users")
+@Table(name = "app_users")
 public class User {
 
     @Id

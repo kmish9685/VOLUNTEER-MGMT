@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
  * Must be reviewed and approved by the hosting Organization before the hours
  * count toward the volunteer's verified community service credentials.
  *
- * Stored in the "hour_logs" table in MySQL.
+ * Stored in the "hour_logs" table in PostgreSQL (Supabase).
  * =====================================================================
  */
 @Entity

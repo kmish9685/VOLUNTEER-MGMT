@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
  * Enforces a unique constraint so a volunteer cannot sign up for the
  * same event multiple times.
  *
- * Stored in the "registrations" table in MySQL.
+ * Stored in the "registrations" table in PostgreSQL (Supabase).
  * =====================================================================
  */
 @Entity

@@ -1,8 +1,8 @@
 @echo off
 :: ============================================================
 :: VolunteerHub - OPTIONAL quick run with H2 in-memory database
-:: No MySQL needed, but ALL DATA IS LOST when the app stops.
-:: Use run.cmd (MySQL) for the real demo.
+:: No Supabase/PostgreSQL needed, but ALL DATA IS LOST when the app stops.
+:: Use run.cmd (Supabase) for the real demo.
 :: ============================================================
 
 if "%JAVA_HOME%"=="" (

@@ -32,3 +32,6 @@ target/
 *.log
 *.tmp
 *.bak
+
+### Database secrets — NEVER commit this file ###
+db-secret.properties

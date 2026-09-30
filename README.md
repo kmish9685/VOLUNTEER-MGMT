@@ -1,7 +1,7 @@
 # 🤝 VolunteerHub — Online Volunteer Management Platform
 
 > **Semester Live Project** | B.Tech CSE (AI/ML) 3rd Semester  
-> Built with **Java 17 + Spring Boot 3 + Thymeleaf + MySQL 8 + Bootstrap 5**
+> Built with **Java 17 + Spring Boot 3 + Thymeleaf + PostgreSQL (Supabase) + Bootstrap 5**
 
 ---
 
@@ -17,7 +17,7 @@ VolunteerHub is a web platform that **connects NGOs and Community Organizations 
 |------|---------|------------|
 | **JDK 17** | 17+ | Java runtime to compile and run the Spring Boot app |
 | **Apache Maven** | 3.6+ | Build tool to download dependencies and package the project |
-| **MySQL** | 8.0+ | Primary database where all project data is stored |
+| **Supabase account** | Free | Hosted PostgreSQL database (cloud, no local install needed) |
 | **Git** | Any | To clone the repository |
 
 > **Note:** Maven is bundled in the `mvnw.cmd` wrapper in this project. If Maven is not in your PATH, the wrapper will auto-detect it at `%USERPROFILE%\.m2\apache-maven-3.9.6\`.
@@ -32,22 +32,26 @@ git clone https://github.com/YOUR_USERNAME/YOUR_REPO_NAME.git
 cd "VOLUNTEER MGMT"
 ```
 
-### Step 2 – Configure MySQL
-Open `src/main/resources/application.properties` and update if your MySQL credentials are different:
+### Step 2 – Configure Supabase (PostgreSQL)
+1. Create a free project at https://supabase.com  
+2. Go to **Project Settings → Database → Connection string → JDBC**  
+3. Create (or edit) `db-secret.properties` in the project root:
+
 ```properties
-spring.datasource.url=jdbc:mysql://localhost:3306/volunteer_db?createDatabaseIfNotExist=true
-spring.datasource.username=root      # Change if different
-spring.datasource.password=root      # Change if different
+spring.datasource.url=jdbc:postgresql://YOUR-SUPABASE-HOST:5432/postgres?sslmode=require
+spring.datasource.username=postgres
+spring.datasource.password=YOUR-SUPABASE-PASSWORD
 ```
-> The database `volunteer_db` is created automatically on first run.
+
+> ✅ `db-secret.properties` is in `.gitignore` — your password will never reach GitHub.
 
 ### Step 3 – Run the application
 ```powershell
 # On Windows (using the provided wrapper):
-.\mvnw.cmd spring-boot:run
+.\run.cmd
 
-# OR — Run with H2 in-memory database (no MySQL needed):
-.\mvnw.cmd spring-boot:run "-Dspring-boot.run.profiles=h2"
+# OR — Run with H2 in-memory database (no Supabase needed for quick tests):
+.\run-h2.cmd
 ```
 
 ### Step 4 – Open in Browser
@@ -119,7 +123,7 @@ src/main/java/com/volunteer/platform/
 └── controller/                         ← 6 controllers (call services, return views)
 
 src/main/resources/
-├── application.properties              ← MySQL config
+├── application.properties              ← PostgreSQL (Supabase) config + imports db-secret.properties
 ├── application-h2.properties           ← Fallback H2 config
 ├── static/css/custom.css              ← Emerald theme, badges, chat bubbles
 └── templates/
@@ -131,6 +135,8 @@ src/main/resources/
     ├── organization/                   ← 6 org pages
     ├── volunteer/                      ← 5 volunteer pages
     └── messages/                       ← inbox.html (chat UI)
+
+db-secret.properties                    ← LOCAL ONLY — Supabase credentials (in .gitignore)
 ```
 
 ---
@@ -143,8 +149,8 @@ src/main/resources/
 | Spring Boot 3.3.4 | Auto-configuration and embedded Tomcat server |
 | Spring Web MVC | Handles HTTP requests via @Controller |
 | Thymeleaf | Server-side HTML template engine |
-| Spring Data JPA (Hibernate) | ORM — maps Java classes to MySQL tables |
-| MySQL 8 | Relational database |
+| Spring Data JPA (Hibernate) | ORM — maps Java classes to PostgreSQL tables |
+| PostgreSQL (Supabase) | Hosted relational database — free cloud plan |
 | `spring-security-crypto` | BCrypt password hashing only (NOT full Spring Security) |
 | Bootstrap 5 (CDN) | Responsive UI components and layout grid |
 | Bootstrap Icons (CDN) | Icon library for visual indicators |
@@ -154,8 +160,8 @@ src/main/resources/
 
 ## 🛡️ How to Run for Viva Demo
 
-1. Start MySQL service
-2. Run `.\mvnw.cmd spring-boot:run` in PowerShell
+1. Create a free Supabase project and fill in `db-secret.properties`
+2. Run `.\run.cmd` in PowerShell
 3. Open `http://localhost:8080/`
 4. Use the quick demo login buttons on the login page to demonstrate all 3 roles
 5. Walk through: Register → Admin Approve → Volunteer Signup → Attendance → Log Hours → Approve Hours → Messages → Admin Dashboard
@@ -168,3 +174,4 @@ src/main/resources/
 - No full Spring Security — authentication is **plain `HttpSession`** for easy explanation
 - Every class and public method has a **plain-English comment block**
 - The `Settings` page has a sidebar explaining **exactly which Java code** each setting affects
+- `users` is a reserved word in PostgreSQL, so the table is mapped to `app_users` via `@Table(name = "app_users")`

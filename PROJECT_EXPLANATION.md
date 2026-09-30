@@ -34,10 +34,10 @@ We built **VolunteerHub** — a web application where:
 | **Spring Web MVC** | Handles incoming HTTP requests via `@Controller` classes | Clean separation: URL → Controller → Service → View |
 | **Thymeleaf** | Generates HTML on the server with dynamic Java data | Simple, readable syntax inside HTML; no need for separate API calls |
 | **Spring Data JPA (Hibernate)** | Converts Java objects (entities) to SQL database rows | Write 0 SQL; use `findByEmail()` style methods |
-| **MySQL 8** | Stores all application data in tables | Reliable, free, widely taught in colleges |
+| **PostgreSQL 15 (Supabase)** | Stores all application data in tables | Reliable, free cloud tier, industry standard |
 | **spring-security-crypto** | Only for `BCryptPasswordEncoder` | Hashes passwords securely without the complexity of full Spring Security |
 | **Bootstrap 5 (CDN)** | Ready-made CSS components | Professional look, responsive design, zero custom CSS skill needed |
-| **H2 Database (optional)** | In-memory database for quick testing | Run the project instantly without MySQL installation |
+| **H2 Database (optional)** | In-memory database for quick testing | Run the project instantly without Supabase setup |
 
 ---
 
@@ -62,7 +62,7 @@ REPOSITORY Layer (JpaRepository interfaces)
    │  Spring Data JPA generates SQL automatically
    │  - findByEmail(), countByStatus(), sumHoursBy...()
    ▼
-DATABASE (MySQL / H2)
+DATABASE (PostgreSQL / Supabase / H2)
    │  Stores data in 7 tables
    │
    ▼

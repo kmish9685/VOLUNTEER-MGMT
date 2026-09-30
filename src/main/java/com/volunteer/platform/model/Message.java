@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
  * Represents a direct 1-on-1 message exchanged between an Organization
  * and a Volunteer who registered for one of their opportunities.
  *
- * Stored in the "messages" table in MySQL.
+ * Stored in the "messages" table in PostgreSQL (Supabase).
  * =====================================================================
  */
 @Entity

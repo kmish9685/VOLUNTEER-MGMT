@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
  * Allows the Admin to monitor registrations, logins, opportunity updates,
  * attendance changes, and configuration edits.
  *
- * Stored in the "activity_logs" table in MySQL.
+ * Stored in the "activity_logs" table in PostgreSQL (Supabase).
  * =====================================================================
  */
 @Entity
