@@ -62,7 +62,7 @@ REPOSITORY Layer (JpaRepository interfaces)
    │  - findByEmail(), countByStatus(), sumHoursBy...()
    ▼
 DATABASE (PostgreSQL / Supabase / H2)
-   │  Stores data in 7 tables
+   │  Stores data in 6 tables
    │
    ▼
 JPA fetches rows → converts to Java objects (Entities)
@@ -95,7 +95,6 @@ BROWSER displays the final HTML page
    - Checks status is APPROVED, event date is future, slots not full
    - Checks no existing non-cancelled registration via `existsByVolunteerAndOpportunityAndStatusNot()`
    - Creates `new Registration(volunteer, opportunity, REGISTERED)` and saves it
-   - Calls `activityLogService.log(volunteer, "Signed up for: Beach Cleanup")` → saves audit entry
 7. Back in controller: adds `successMessage` via `RedirectAttributes`
 8. Returns `"redirect:/volunteer/dashboard"`
 9. Browser redirects to dashboard, Thymeleaf renders the page with the flash message visible
@@ -112,7 +111,6 @@ BROWSER displays the final HTML page
    - `passwordEncoder.matches(rawPassword, user.getPassword())` → BCrypt comparison
    - If no match → throws `IllegalArgumentException("Invalid email or password.")`
    - If status is BLOCKED → throws `IllegalStateException("Your account has been blocked...")`
-   - Logs `"User logged in: Rahul Verma"` via `ActivityLogService`
 5. Back in controller: `session.setAttribute("loggedInUser", user)` → stores user in session
 6. Calls `getDashboardRedirect(role)` → returns `"redirect:/volunteer/dashboard"`
 7. Browser redirects to the volunteer dashboard
@@ -129,7 +127,6 @@ BROWSER displays the final HTML page
 | `hour_logs` | `HourLog.java` | Service hours logged by volunteers | ManyToOne → registrations |
 | `messages` | `Message.java` | 1-on-1 messages between Org & Volunteer | ManyToOne → app_users (sender + receiver) |
 | `system_settings` | `SystemSetting.java` | Platform config key-value pairs | — |
-| `activity_logs` | `ActivityLog.java` | Audit trail for Admin monitoring | ManyToOne → app_users (nullable) |
 
 ### ER Relationships in Plain English:
 - One **User** (org) can have many **Opportunities**
@@ -175,30 +172,30 @@ BROWSER displays the final HTML page
 
 | Feature | Controller Method | Service Method | Template |
 |---------|------------------|----------------|----------|
-| Public landing page | `HomeController.showLandingPage()` | `getTopUpcomingApprovedOpportunities()` | `index.html` |
+| Public landing page | `HomeController.showLandingPage()` | `OpportunityService.getTopUpcomingApprovedOpportunities()` | `index.html` |
 | Login | `AuthController.processLogin()` | `UserService.authenticate()` | `auth/login.html` |
 | Register | `AuthController.processRegister()` | `UserService.registerUser()` | `auth/register.html` |
 | Admin dashboard | `AdminController.showDashboard()` | Multiple count services | `admin/dashboard.html` |
-| User management | `AdminController.listUsers()` | `UserService.searchAndFilterUsers()` | `admin/users.html` |
+| User management | `AdminController.listUsers()` | `UserService.getAllUsers()` | `admin/users.html` (plain list of all users) |
 | Create user form | `AdminController.showCreateUserForm()` | `UserService.createUserByAdmin()` | `admin/user-form.html` |
 | Edit user form | `AdminController.showEditUserForm()` | `UserService.updateUserByAdmin()` | `admin/user-form.html` |
 | Block/Unblock user | `AdminController.toggleUserStatus()` | `UserService.toggleUserStatus()` | Redirect to `/admin/users` |
 | Delete user | `AdminController.deleteUser()` | `UserService.deleteUser()` | Redirect to `/admin/users` |
 | Review opportunities | `AdminController.showReviewOpportunities()` | `OpportunityService.getPendingOpportunities()`, `getAllOpportunities()` | `admin/review-opportunities.html` (pending on top, all below) |
 | Review decision | `AdminController.reviewOpportunity()` | `OpportunityService.reviewOpportunity()` | Redirect to `/admin/opportunities/review` |
-| Platform monitoring | `AdminController.showMonitoring()` | `RegistrationService.getAllRegistrations()`, `ActivityLogService.getAllLogs()` | `admin/monitoring.html` (registrations + audit logs) |
+| Platform monitoring | `AdminController.showMonitoring()` | `RegistrationService.getAllRegistrations()` | `admin/monitoring.html` (all registrations & attendance) |
 | Edit settings | `AdminController.showSettings()` | `SettingService.getAllSettings()` | `admin/settings.html` |
 | Update setting | `AdminController.updateSetting()` | `SettingService.updateSetting()` | Redirect to `/admin/settings` |
 | Org dashboard | `OrganizationController.showDashboard()` | Multiple count services | `organization/dashboard.html` |
 | My events | `OrganizationController.listOpportunities()` | `OpportunityService.getOpportunitiesByOrganization()` | `organization/opportunities.html` |
-| Post event | `OrganizationController.processCreateOpportunity()` | `OpportunityService.createOpportunity()` | `organization/opportunity-form.html` |
-| Edit event | `OrganizationController.processEditOpportunity()` | `OpportunityService.updateOpportunity()` | `organization/opportunity-form.html` |
-| View volunteer roster | `OrganizationController.viewVolunteers()` | `RegistrationService.getRegistrationsForOpportunity()` | `organization/volunteers.html` |
+| Post event | `OrganizationController.processCreateOpportunity()` | `OpportunityService.createOpportunity()` | `organization/opportunity-form.html` (with Fill Sample Data) |
+| Delete event | `OrganizationController.deleteOpportunity()` | `OpportunityService.deleteOpportunity()` | Redirect to `/org/opportunities` |
+| View volunteer roster | `OrganizationController.showRegisteredVolunteers()` | `RegistrationService.getRegistrationsByOpportunity()` | `organization/volunteers.html` |
 | Mark attendance | `OrganizationController.markAttendance()` | `RegistrationService.markAttendance()` | Redirect to `/org/volunteers/{id}` |
 | Participation report | `OrganizationController.showParticipationReport()` | `hourLogService.getTotalHoursForOpportunity()` | `organization/report.html` |
 | Volunteer dashboard | `VolunteerController.showDashboard()` | `hourLogService.getTotalHoursForVolunteer()` | `volunteer/dashboard.html` |
 | Browse events | `VolunteerController.browseOpportunities()` | `OpportunityService.getUpcomingApprovedOpportunities()` | `volunteer/browse.html` |
-| Event details | `VolunteerController.showOpportunityDetails()` | `OpportunityService.getOpportunityById()` | `volunteer/opportunity-details.html` |
+| Event details | `VolunteerController.showOpportunityDetails()` | `OpportunityService.findById()` | `volunteer/opportunity-details.html` |
 | Sign up | `VolunteerController.processSignUp()` | `RegistrationService.signUp()` | Redirect to `/volunteer/dashboard` |
 | Cancel registration | `VolunteerController.processCancel()` | `RegistrationService.cancelRegistration()` | Redirect to `/volunteer/dashboard` |
 | Log hours | `VolunteerController.processLogHours()` | `HourLogService.logHours()` | `volunteer/log-hours.html` |

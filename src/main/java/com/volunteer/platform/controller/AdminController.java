@@ -8,8 +8,6 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.util.List;
-
 /**
  * =====================================================================
  * AdminController (Presentation Layer)
@@ -18,8 +16,7 @@ import java.util.List;
  * - KPI Metrics Dashboard
  * - User Management (Create, Edit, Block/Unblock, Delete)
  * - Review Opportunities (Approve or Reject with Admin Remarks)
- *   Shows PENDING on top, all others below — one combined page
- * - Monitoring: all registrations + recent activity log — one page
+ * - Monitoring: all registrations & attendance status
  * - System Settings (3 settings: platform_name, allow_registrations, max_hours_per_log)
  * =====================================================================
  */
@@ -32,7 +29,6 @@ public class AdminController {
     private final RegistrationService registrationService;
     private final HourLogService hourLogService;
     private final SettingService settingService;
-    private final ActivityLogService activityLogService;
 
     /**
      * Injects all required business services.
@@ -41,14 +37,12 @@ public class AdminController {
                            OpportunityService opportunityService,
                            RegistrationService registrationService,
                            HourLogService hourLogService,
-                           SettingService settingService,
-                           ActivityLogService activityLogService) {
+                           SettingService settingService) {
         this.userService = userService;
         this.opportunityService = opportunityService;
         this.registrationService = registrationService;
         this.hourLogService = hourLogService;
         this.settingService = settingService;
-        this.activityLogService = activityLogService;
     }
 
     /**
@@ -62,21 +56,15 @@ public class AdminController {
         model.addAttribute("approvedOpportunitiesCount", opportunityService.countByStatus(OpportunityStatus.APPROVED));
         model.addAttribute("totalRegistrations", registrationService.countTotalRegistrations());
         model.addAttribute("totalHours", hourLogService.getTotalHoursPlatform());
-        model.addAttribute("recentLogs", activityLogService.getLatestLogs());
         return "admin/dashboard";
     }
 
     /**
-     * Displays the User Management page with search and role filtering.
+     * Displays the User Management page showing a plain list of all users.
      */
     @GetMapping("/users")
-    public String listUsers(@RequestParam(value = "role", required = false) Role role,
-                            @RequestParam(value = "search", required = false) String search,
-                            Model model) {
-        List<User> users = userService.searchAndFilterUsers(role, search);
-        model.addAttribute("users", users);
-        model.addAttribute("selectedRole", role);
-        model.addAttribute("searchQuery", search);
+    public String listUsers(Model model) {
+        model.addAttribute("users", userService.getAllUsers());
         return "admin/users";
     }
 
@@ -101,11 +89,9 @@ public class AdminController {
                                     @RequestParam(value = "phone", required = false) String phone,
                                     @RequestParam("role") Role role,
                                     @RequestParam(value = "organizationDescription", required = false) String orgDesc,
-                                    HttpSession session,
                                     RedirectAttributes redirectAttributes) {
         try {
-            User admin = (User) session.getAttribute("loggedInUser");
-            userService.createUserByAdmin(fullName, email, password, phone, role, orgDesc, admin);
+            userService.createUserByAdmin(fullName, email, password, phone, role, orgDesc);
             redirectAttributes.addFlashAttribute("successMessage", "User account created successfully!");
             return "redirect:/admin/users";
         } catch (Exception ex) {
@@ -140,11 +126,9 @@ public class AdminController {
                                   @RequestParam(value = "phone", required = false) String phone,
                                   @RequestParam("role") Role role,
                                   @RequestParam(value = "organizationDescription", required = false) String orgDesc,
-                                  HttpSession session,
                                   RedirectAttributes redirectAttributes) {
         try {
-            User admin = (User) session.getAttribute("loggedInUser");
-            userService.updateUserByAdmin(id, fullName, email, phone, role, orgDesc, admin);
+            userService.updateUserByAdmin(id, fullName, email, phone, role, orgDesc);
             redirectAttributes.addFlashAttribute("successMessage", "User details updated successfully!");
             return "redirect:/admin/users";
         } catch (Exception ex) {
@@ -194,14 +178,6 @@ public class AdminController {
     }
 
     /**
-     * Redirect old /admin/opportunities URL to the review page.
-     */
-    @GetMapping("/opportunities")
-    public String redirectToReview() {
-        return "redirect:/admin/opportunities/review";
-    }
-
-    /**
      * Processes Admin review decision (APPROVE or REJECT with optional remark).
      */
     @PostMapping("/opportunities/review/{id}")
@@ -221,30 +197,12 @@ public class AdminController {
     }
 
     /**
-     * Displays the Monitoring page: all registrations + recent activity log.
-     * Replaces the old separate Participation and Activity Logs pages.
+     * Displays the Monitoring page: all registrations & attendance status.
      */
     @GetMapping("/monitoring")
     public String showMonitoring(Model model) {
         model.addAttribute("registrations", registrationService.getAllRegistrations());
-        model.addAttribute("logs", activityLogService.getAllLogs());
         return "admin/monitoring";
-    }
-
-    /**
-     * Redirect old /admin/participation URL to monitoring.
-     */
-    @GetMapping("/participation")
-    public String redirectParticipation() {
-        return "redirect:/admin/monitoring";
-    }
-
-    /**
-     * Redirect old /admin/activity-logs URL to monitoring.
-     */
-    @GetMapping("/activity-logs")
-    public String redirectActivityLogs() {
-        return "redirect:/admin/monitoring";
     }
 
     /**
@@ -262,12 +220,9 @@ public class AdminController {
     @PostMapping("/settings/update")
     public String updateSetting(@RequestParam("settingKey") String key,
                                 @RequestParam("settingValue") String value,
-                                HttpSession session,
                                 RedirectAttributes redirectAttributes) {
         try {
-            User admin = (User) session.getAttribute("loggedInUser");
             settingService.updateSetting(key, value);
-            activityLogService.log(admin, "Admin updated system setting: " + key + " = " + value);
             redirectAttributes.addFlashAttribute("successMessage", "Setting [" + key + "] updated successfully.");
         } catch (Exception ex) {
             redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());

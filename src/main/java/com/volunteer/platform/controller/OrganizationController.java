@@ -77,7 +77,6 @@ public class OrganizationController {
     @GetMapping("/opportunities/new")
     public String showCreateOpportunityForm(Model model) {
         model.addAttribute("opportunity", new Opportunity());
-        model.addAttribute("isEdit", false);
         return "organization/opportunity-form";
     }
 
@@ -96,48 +95,6 @@ public class OrganizationController {
         } catch (Exception ex) {
             redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
             return "redirect:/org/opportunities/new";
-        }
-    }
-
-    /**
-     * Displays the form to edit an existing opportunity.
-     */
-    @GetMapping("/opportunities/edit/{id}")
-    public String showEditOpportunityForm(@PathVariable("id") Long id,
-                                          HttpSession session,
-                                          Model model,
-                                          RedirectAttributes redirectAttributes) {
-        User org = (User) session.getAttribute("loggedInUser");
-        return opportunityService.findById(id).map(opp -> {
-            if (!opp.getOrganization().getId().equals(org.getId())) {
-                redirectAttributes.addFlashAttribute("errorMessage", "Access denied.");
-                return "redirect:/org/opportunities";
-            }
-            model.addAttribute("opportunity", opp);
-            model.addAttribute("isEdit", true);
-            return "organization/opportunity-form";
-        }).orElseGet(() -> {
-            redirectAttributes.addFlashAttribute("errorMessage", "Opportunity not found.");
-            return "redirect:/org/opportunities";
-        });
-    }
-
-    /**
-     * Processes updates to an existing opportunity.
-     */
-    @PostMapping("/opportunities/edit/{id}")
-    public String processEditOpportunity(@PathVariable("id") Long id,
-                                         @ModelAttribute("opportunity") Opportunity updatedOpp,
-                                         HttpSession session,
-                                         RedirectAttributes redirectAttributes) {
-        try {
-            User org = (User) session.getAttribute("loggedInUser");
-            opportunityService.updateOpportunity(id, updatedOpp, org);
-            redirectAttributes.addFlashAttribute("successMessage", "Opportunity updated and re-submitted for review!");
-            return "redirect:/org/opportunities";
-        } catch (Exception ex) {
-            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
-            return "redirect:/org/opportunities/edit/" + id;
         }
     }
 

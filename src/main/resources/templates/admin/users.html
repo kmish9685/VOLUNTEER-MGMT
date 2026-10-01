@@ -21,32 +21,6 @@
             </a>
         </div>
 
-        <!-- Search and Filter Bar -->
-        <div class="card p-3 mb-4 bg-white shadow-sm">
-            <form th:action="@{/admin/users}" method="get" class="row g-2 align-items-center">
-                <div class="col-md-5">
-                    <div class="input-group">
-                        <span class="input-group-text bg-light"><i class="bi bi-search"></i></span>
-                        <input type="text" class="form-control" name="search" th:value="${searchQuery}"
-                               placeholder="Search by full name or email...">
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <select class="form-select" name="role">
-                        <option value="" th:selected="${selectedRole == null}">All Roles (Volunteer, Org, Admin)</option>
-                        <option value="VOLUNTEER" th:selected="${selectedRole != null and selectedRole.name() == 'VOLUNTEER'}">Volunteers Only</option>
-                        <option value="ORGANIZATION" th:selected="${selectedRole != null and selectedRole.name() == 'ORGANIZATION'}">Organizations Only</option>
-                        <option value="ADMIN" th:selected="${selectedRole != null and selectedRole.name() == 'ADMIN'}">Admins Only</option>
-                    </select>
-                </div>
-                <div class="col-md-3 d-flex gap-2">
-                    <button type="submit" class="btn btn-outline-primary w-100">
-                        <i class="bi bi-funnel me-1"></i> Filter
-                    </button>
-                    <a th:href="@{/admin/users}" class="btn btn-outline-secondary">Reset</a>
-                </div>
-            </form>
-        </div>
 
         <!-- Users Table -->
         <div class="card bg-white shadow-sm">
@@ -64,7 +38,7 @@
                         </thead>
                         <tbody>
                             <tr th:if="${#lists.isEmpty(users)}">
-                                <td colspan="5" class="text-center py-4 text-muted">No users matched your search criteria.</td>
+                                <td colspan="5" class="text-center py-4 text-muted">No users registered yet.</td>
                             </tr>
                             <tr th:each="user : ${users}">
                                 <td>

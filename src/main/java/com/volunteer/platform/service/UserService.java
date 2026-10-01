@@ -19,7 +19,6 @@ import java.util.Optional;
  * - Registration validation & BCrypt password hashing
  * - Session-based authentication & status checks (ACTIVE vs BLOCKED)
  * - Admin user management (create, update, block/unblock, delete)
- * - Search and role-based filtering for user rosters
  * =====================================================================
  */
 @SuppressWarnings("null") // Spring Data JPA's findById(Long) is always called with non-null ids from path variables
@@ -28,19 +27,16 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final SettingService settingService;
-    private final ActivityLogService activityLogService;
     private final PasswordEncoder passwordEncoder;
 
     /**
-     * Constructor for injecting repository, settings, audit, and encoder dependencies.
+     * Constructor for injecting repository, settings, and encoder dependencies.
      */
     public UserService(UserRepository userRepository,
                        SettingService settingService,
-                       ActivityLogService activityLogService,
                        PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.settingService = settingService;
-        this.activityLogService = activityLogService;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -60,10 +56,6 @@ public class UserService {
             throw new IllegalArgumentException("An account with email " + email + " already exists.");
         }
 
-        if (role == Role.ADMIN) {
-            throw new IllegalArgumentException("Administrator accounts cannot be self-registered.");
-        }
-
         User user = new User();
         user.setFullName(fullName.trim());
         user.setEmail(email.trim().toLowerCase());
@@ -75,9 +67,7 @@ public class UserService {
             user.setOrganizationDescription(organizationDescription.trim());
         }
 
-        User savedUser = userRepository.save(user);
-        activityLogService.log(savedUser, "New user registered: " + savedUser.getFullName() + " (" + savedUser.getRole() + ")");
-        return savedUser;
+        return userRepository.save(user);
     }
 
     /**
@@ -96,7 +86,6 @@ public class UserService {
             throw new IllegalStateException("Your account has been blocked by the administrator.");
         }
 
-        activityLogService.log(user, "User logged in: " + user.getFullName());
         return user;
     }
 
@@ -122,27 +111,11 @@ public class UserService {
     }
 
     /**
-     * Searches and filters users by role and keyword (name or email).
-     */
-    public List<User> searchAndFilterUsers(Role role, String keyword) {
-        if (keyword != null && !keyword.trim().isEmpty()) {
-            String term = keyword.trim();
-            if (role != null) {
-                return userRepository.searchByRoleAndKeyword(role, term);
-            }
-            return userRepository.findByFullNameContainingIgnoreCaseOrEmailContainingIgnoreCase(term, term);
-        } else if (role != null) {
-            return userRepository.findByRole(role);
-        }
-        return userRepository.findAll();
-    }
-
-    /**
      * Allows an Admin to create a new user account with any assigned role.
      */
     @Transactional
     public User createUserByAdmin(String fullName, String email, String rawPassword, String phone,
-                                  Role role, String organizationDescription, User currentAdmin) {
+                                  Role role, String organizationDescription) {
         if (userRepository.existsByEmail(email.trim().toLowerCase())) {
             throw new IllegalArgumentException("An account with email " + email + " already exists.");
         }
@@ -158,9 +131,7 @@ public class UserService {
             user.setOrganizationDescription(organizationDescription.trim());
         }
 
-        User savedUser = userRepository.save(user);
-        activityLogService.log(currentAdmin, "Admin created user: " + savedUser.getFullName() + " (" + savedUser.getRole() + ")");
-        return savedUser;
+        return userRepository.save(user);
     }
 
     /**
@@ -168,7 +139,7 @@ public class UserService {
      */
     @Transactional
     public void updateUserByAdmin(Long id, String fullName, String email, String phone,
-                                  Role role, String orgDescription, User currentAdmin) {
+                                  Role role, String orgDescription) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("User not found with id: " + id));
 
@@ -186,7 +157,6 @@ public class UserService {
         }
 
         userRepository.save(user);
-        activityLogService.log(currentAdmin, "Admin updated profile for user: " + user.getFullName());
     }
 
     /**
@@ -203,10 +173,8 @@ public class UserService {
 
         if (targetUser.getStatus() == UserStatus.ACTIVE) {
             targetUser.setStatus(UserStatus.BLOCKED);
-            activityLogService.log(currentAdmin, "Admin blocked user account: " + targetUser.getEmail());
         } else {
             targetUser.setStatus(UserStatus.ACTIVE);
-            activityLogService.log(currentAdmin, "Admin unblocked user account: " + targetUser.getEmail());
         }
         userRepository.save(targetUser);
     }
@@ -223,7 +191,6 @@ public class UserService {
         User targetUser = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found with id: " + userId));
 
-        activityLogService.log(currentAdmin, "Admin deleted user: " + targetUser.getFullName() + " (" + targetUser.getEmail() + ")");
         userRepository.delete(targetUser);
     }
 

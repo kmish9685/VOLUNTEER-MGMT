@@ -28,17 +28,14 @@ public class RegistrationService {
 
     private final RegistrationRepository registrationRepository;
     private final OpportunityRepository opportunityRepository;
-    private final ActivityLogService activityLogService;
 
     /**
-     * Constructor for injecting repository and audit logging dependencies.
+     * Constructor for injecting repository dependencies.
      */
     public RegistrationService(RegistrationRepository registrationRepository,
-                               OpportunityRepository opportunityRepository,
-                               ActivityLogService activityLogService) {
+                               OpportunityRepository opportunityRepository) {
         this.registrationRepository = registrationRepository;
         this.opportunityRepository = opportunityRepository;
-        this.activityLogService = activityLogService;
     }
 
     /**
@@ -75,15 +72,11 @@ public class RegistrationService {
             // Re-activate previously cancelled registration
             existing.setStatus(RegistrationStatus.REGISTERED);
             existing.setRegisteredAt(LocalDateTime.now());
-            Registration saved = registrationRepository.save(existing);
-            activityLogService.log(volunteer, "Volunteer re-registered for: " + opportunity.getTitle());
-            return saved;
+            return registrationRepository.save(existing);
         }
 
         Registration newRegistration = new Registration(volunteer, opportunity, RegistrationStatus.REGISTERED);
-        Registration saved = registrationRepository.save(newRegistration);
-        activityLogService.log(volunteer, "Volunteer signed up for: " + opportunity.getTitle());
-        return saved;
+        return registrationRepository.save(newRegistration);
     }
 
     /**
@@ -104,7 +97,6 @@ public class RegistrationService {
 
         registration.setStatus(RegistrationStatus.CANCELLED);
         registrationRepository.save(registration);
-        activityLogService.log(volunteer, "Volunteer cancelled registration for: " + registration.getOpportunity().getTitle());
     }
 
     /**
@@ -129,8 +121,6 @@ public class RegistrationService {
 
         registration.setStatus(newStatus);
         registrationRepository.save(registration);
-        activityLogService.log(organization, "Organization marked " + registration.getVolunteer().getFullName() +
-                " as " + newStatus + " for " + registration.getOpportunity().getTitle());
     }
 
     /**
@@ -158,44 +148,51 @@ public class RegistrationService {
     }
 
     /**
-     * Retrieves all registrations for a specific opportunity event roster.
+     * Retrieves all registrations for an opportunity.
+     */
+    public List<Registration> getRegistrationsForOpportunity(Opportunity opportunity) {
+        return registrationRepository.findByOpportunityOrderByRegisteredAtDesc(opportunity);
+    }
+
+    /**
+     * Alias for getRegistrationsForOpportunity.
      */
     public List<Registration> getRegistrationsByOpportunity(Opportunity opportunity) {
         return registrationRepository.findByOpportunityOrderByRegisteredAtDesc(opportunity);
     }
 
     /**
-     * Retrieves all registrations system-wide for the Admin participation monitor.
-     */
-    public List<Registration> getAllRegistrations() {
-        return registrationRepository.findAllByOrderByRegisteredAtDesc();
-    }
-
-    /**
-     * Counts the total number of registrations system-wide.
-     */
-    public long countTotalRegistrations() {
-        return registrationRepository.count();
-    }
-
-    /**
-     * Counts total registered volunteers across an organization's events.
+     * Counts registrations for an organization's events.
      */
     public long countByOrganization(User organization) {
         return registrationRepository.countByOrganization(organization);
     }
 
     /**
-     * Counts registrations of a volunteer with a specific status.
+     * Counts registrations matching an opportunity and specific status.
+     */
+    public long countByOpportunityAndStatus(Opportunity opportunity, RegistrationStatus status) {
+        return registrationRepository.countByOpportunityAndStatus(opportunity, status);
+    }
+
+    /**
+     * Counts total registrations for a volunteer by status.
      */
     public long countByVolunteerAndStatus(User volunteer, RegistrationStatus status) {
         return registrationRepository.countByVolunteerAndStatus(volunteer, status);
     }
 
     /**
-     * Counts registrations of an opportunity with a specific status (for reports).
+     * Counts total signups across all opportunities on the platform.
      */
-    public long countByOpportunityAndStatus(Opportunity opportunity, RegistrationStatus status) {
-        return registrationRepository.countByOpportunityAndStatus(opportunity, status);
+    public long countTotalRegistrations() {
+        return registrationRepository.count();
+    }
+
+    /**
+     * Retrieves all platform registrations for Admin monitoring.
+     */
+    public List<Registration> getAllRegistrations() {
+        return registrationRepository.findAllByOrderByRegisteredAtDesc();
     }
 }

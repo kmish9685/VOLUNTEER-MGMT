@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/layout :: header(${isEdit ? 'Edit Opportunity' : 'Post Opportunity'})}"></head>
+<head th:replace="~{fragments/layout :: header('Post Opportunity')}"></head>
 <body class="bg-light">
 
     <!-- Navbar Fragment -->
@@ -14,18 +14,23 @@
             <div class="col-lg-8">
                 <div class="card p-4 shadow-sm bg-white">
                     <div class="card-body">
-                        <div class="d-flex align-items-center gap-3 mb-4">
-                            <div class="stat-icon bg-primary-subtle text-primary">
-                                <i th:class="${isEdit ? 'bi bi-pencil-square' : 'bi bi-calendar-plus'}"></i>
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="stat-icon bg-primary-subtle text-primary">
+                                    <i class="bi bi-calendar-plus"></i>
+                                </div>
+                                <div>
+                                    <h3 class="fw-bold mb-0">Post New Volunteering Opportunity</h3>
+                                    <p class="text-muted small mb-0">Fill in the event logistics and volunteer responsibilities</p>
+                                </div>
                             </div>
-                            <div>
-                                <h3 class="fw-bold mb-0" th:text="${isEdit ? 'Edit Volunteering Opportunity' : 'Post New Volunteering Opportunity'}">Post Opportunity</h3>
-                                <p class="text-muted small mb-0">Fill in the event logistics and volunteer responsibilities</p>
-                            </div>
+                            <!-- Fill Sample Data Button for Quick Viva Demo -->
+                            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="fillSampleData()">
+                                <i class="bi bi-magic me-1"></i> Fill Sample Data
+                            </button>
                         </div>
 
-                        <form th:action="${isEdit ? '/org/opportunities/edit/' + opportunity.id : '/org/opportunities/new'}"
-                              th:object="${opportunity}" method="post">
+                        <form th:action="@{/org/opportunities/new}" th:object="${opportunity}" method="post">
 
                             <!-- Title -->
                             <div class="mb-3">
@@ -81,7 +86,7 @@
                                     <i class="bi bi-arrow-left me-1"></i> Cancel
                                 </a>
                                 <button type="submit" class="btn btn-primary px-4">
-                                    <i class="bi bi-check2 me-1"></i> <span th:text="${isEdit ? 'Update Opportunity' : 'Publish Opportunity'}">Publish</span>
+                                    <i class="bi bi-check2 me-1"></i> Publish Opportunity
                                 </button>
                             </div>
                         </form>
@@ -91,6 +96,26 @@
             </div>
         </div>
     </div>
+
+    <!-- JavaScript to automatically populate sample opportunity details for quick demonstration -->
+    <script>
+        function fillSampleData() {
+            // Calculates a target date 14 days from today in YYYY-MM-DD format for the HTML5 date input
+            const d = new Date();
+            d.setDate(d.getDate() + 14);
+            const yyyy = d.getFullYear();
+            const mm = String(d.getMonth() + 1).padStart(2, '0');
+            const dd = String(d.getDate()).padStart(2, '0');
+
+            document.getElementById('title').value = 'Campus Tree Plantation Drive';
+            document.getElementById('description').value = 'Plant 100 saplings around the college campus. Gloves, tools and water will be provided. Please wear comfortable shoes.';
+            document.getElementById('location').value = 'Galgotias University, Main Lawn';
+            document.getElementById('eventDate').value = `${yyyy}-${mm}-${dd}`;
+            document.getElementById('startTime').value = '09:00';
+            document.getElementById('endTime').value = '13:00';
+            document.getElementById('totalSlots').value = 25;
+        }
+    </script>
 
     <!-- Footer Fragment -->
     <div th:replace="~{fragments/layout :: footer}"></div>

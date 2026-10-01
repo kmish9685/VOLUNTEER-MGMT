@@ -59,7 +59,7 @@ spring.datasource.password=YOUR-SUPABASE-PASSWORD
 http://localhost:8080/
 ```
 
-> ✅ On first startup, all 7 database tables are auto-created and the demo data is seeded automatically!
+> ✅ On first startup, all 6 database tables are auto-created and the demo data is seeded automatically!
 
 ---
 
@@ -71,7 +71,6 @@ http://localhost:8080/
 | **ORGANIZATION** | greenearth@gmail.com | org123 | Post & manage events |
 | **ORGANIZATION** | helpinghands@gmail.com | org123 | Post & manage events |
 | **VOLUNTEER** | rahul@gmail.com | vol123 | Browse, signup, log hours |
-| **VOLUNTEER** | priya@gmail.com | vol123 | Browse, signup, log hours |
 | **VOLUNTEER** | aman@gmail.com | vol123 | Browse, signup, log hours |
 
 ---
@@ -80,14 +79,14 @@ http://localhost:8080/
 
 ### 🔴 ADMIN (`/admin/...`)
 - Dashboard with KPI counters (volunteers, orgs, signups, total hours)
-- User Management — Create, edit, block/unblock, delete any user
+- User Management — Plain list of all users: create, edit, block/unblock, delete any user
 - Review Opportunities — Approve or Reject with feedback remark (shows pending on top, all others below)
-- Platform Monitoring — Single combined page showing all registrations + real-time activity audit log
+- Platform Monitoring — Single page showing all volunteer registrations & attendance status
 - System Settings — Configure 3 platform-wide values (`platform_name`, `allow_registrations`, `max_hours_per_log`)
 
 ### 🔵 ORGANIZATION (`/org/...`)
 - Dashboard with personal event metrics
-- Post, edit, delete volunteering opportunities
+- Post (with quick "Fill Sample Data" button) and delete volunteering opportunities
 - View registered volunteer roster per event
 - Mark attendance (ATTENDED / ABSENT) on or after event date
 - Printable participation summary report (`window.print()`)
@@ -116,8 +115,8 @@ http://localhost:8080/
 src/main/java/com/volunteer/platform/
 ├── VolunteerPlatformApplication.java   ← Spring Boot entry point + BCrypt bean
 ├── config/                             ← Interceptor, WebConfig, GlobalModelAttributes, DataLoader
-├── model/                              ← 7 JPA entities + 3 enums (NO Lombok)
-├── repository/                         ← 7 Spring Data JPA interfaces
+├── model/                              ← 6 JPA entities + 3 enums (NO Lombok)
+├── repository/                         ← 6 Spring Data JPA interfaces
 ├── service/                            ← ALL business logic rules
 └── controller/                         ← 6 controllers (call services, return views)
 

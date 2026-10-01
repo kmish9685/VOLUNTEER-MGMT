@@ -16,8 +16,8 @@ import java.util.Optional;
  * OpportunityService (Business Logic Layer)
  * ---------------------------------------------------------------------
  * Handles all business logic for volunteering opportunities:
- * - All new and edited opportunities go to PENDING status (no auto-approve)
- * - Organization update & delete permissions
+ * - All new opportunities go to PENDING status
+ * - Organization delete permission
  * - Admin approval and rejection workflow with feedback remarks
  * - Filtering upcoming approved events for volunteers and public landing
  * =====================================================================
@@ -27,15 +27,12 @@ import java.util.Optional;
 public class OpportunityService {
 
     private final OpportunityRepository opportunityRepository;
-    private final ActivityLogService activityLogService;
 
     /**
-     * Constructor for injecting repository and audit services.
+     * Constructor for injecting repository dependency.
      */
-    public OpportunityService(OpportunityRepository opportunityRepository,
-                              ActivityLogService activityLogService) {
+    public OpportunityService(OpportunityRepository opportunityRepository) {
         this.opportunityRepository = opportunityRepository;
-        this.activityLogService = activityLogService;
     }
 
     /**
@@ -54,43 +51,7 @@ public class OpportunityService {
         opportunity.setStatus(OpportunityStatus.PENDING);
         opportunity.setOrganization(organization);
 
-        Opportunity saved = opportunityRepository.save(opportunity);
-        activityLogService.log(organization, "Organization posted new opportunity: " + saved.getTitle() + " (Pending Review)");
-        return saved;
-    }
-
-    /**
-     * Updates an opportunity's details. Resets status back to PENDING for re-review.
-     */
-    @Transactional
-    public Opportunity updateOpportunity(Long id, Opportunity updatedData, User organization) {
-        Opportunity existing = opportunityRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Opportunity not found with id: " + id));
-
-        if (!existing.getOrganization().getId().equals(organization.getId())) {
-            throw new IllegalArgumentException("You are not authorized to edit this opportunity.");
-        }
-
-        if (updatedData.getTotalSlots() < 1) {
-            throw new IllegalArgumentException("Total volunteer slots must be at least 1.");
-        }
-        if (updatedData.getEventDate() != null && updatedData.getEventDate().isBefore(LocalDate.now())) {
-            throw new IllegalArgumentException("Event date cannot be in the past.");
-        }
-
-        existing.setTitle(updatedData.getTitle().trim());
-        existing.setDescription(updatedData.getDescription().trim());
-        existing.setLocation(updatedData.getLocation().trim());
-        existing.setEventDate(updatedData.getEventDate());
-        existing.setStartTime(updatedData.getStartTime());
-        existing.setEndTime(updatedData.getEndTime());
-        existing.setTotalSlots(updatedData.getTotalSlots());
-        existing.setStatus(OpportunityStatus.PENDING);
-        existing.setAdminRemark(null);
-
-        Opportunity saved = opportunityRepository.save(existing);
-        activityLogService.log(organization, "Organization updated opportunity: " + saved.getTitle());
-        return saved;
+        return opportunityRepository.save(opportunity);
     }
 
     /**
@@ -105,7 +66,6 @@ public class OpportunityService {
             throw new IllegalArgumentException("You are not authorized to delete this opportunity.");
         }
 
-        activityLogService.log(organization, "Organization deleted opportunity: " + existing.getTitle());
         opportunityRepository.delete(existing);
     }
 
@@ -121,7 +81,6 @@ public class OpportunityService {
         existing.setAdminRemark(adminRemark != null ? adminRemark.trim() : null);
 
         opportunityRepository.save(existing);
-        activityLogService.log(admin, "Admin reviewed opportunity [" + existing.getTitle() + "]: " + newStatus);
     }
 
     /**
@@ -139,32 +98,33 @@ public class OpportunityService {
     }
 
     /**
-     * Retrieves all opportunities in the platform across all statuses.
+     * Retrieves all opportunities across all statuses for the Admin moderation list.
      */
     public List<Opportunity> getAllOpportunities() {
         return opportunityRepository.findAll();
     }
 
     /**
-     * Retrieves all opportunities posted by a specific Organization.
+     * Retrieves all opportunities created by a specific organization.
      */
     public List<Opportunity> getOpportunitiesByOrganization(User organization) {
         return opportunityRepository.findByOrganizationOrderByCreatedAtDesc(organization);
     }
 
     /**
-     * Retrieves approved upcoming opportunities, filtered by optional search keyword.
+     * Retrieves all approved upcoming opportunities with optional search keyword.
      */
-    public List<Opportunity> getUpcomingApprovedOpportunities(String query) {
+    public List<Opportunity> getUpcomingApprovedOpportunities(String keyword) {
         LocalDate today = LocalDate.now();
-        if (query != null && !query.trim().isEmpty()) {
-            return opportunityRepository.searchUpcomingApproved(OpportunityStatus.APPROVED, today, query.trim());
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            return opportunityRepository.searchUpcomingApproved(OpportunityStatus.APPROVED, today, keyword.trim());
         }
-        return opportunityRepository.findByStatusAndEventDateGreaterThanEqualOrderByEventDateAsc(OpportunityStatus.APPROVED, today);
+        return opportunityRepository.findByStatusAndEventDateGreaterThanEqualOrderByEventDateAsc(
+                OpportunityStatus.APPROVED, today);
     }
 
     /**
-     * Retrieves the top 6 upcoming approved opportunities for the public landing page.
+     * Fetches top upcoming approved opportunities for display on the landing page.
      */
     public List<Opportunity> getTopUpcomingApprovedOpportunities() {
         return opportunityRepository.findTop6ByStatusAndEventDateGreaterThanEqualOrderByEventDateAsc(
@@ -172,14 +132,14 @@ public class OpportunityService {
     }
 
     /**
-     * Counts the total number of opportunities by review status.
+     * Counts opportunities matching a specific status for dashboard KPIs.
      */
     public long countByStatus(OpportunityStatus status) {
         return opportunityRepository.countByStatus(status);
     }
 
     /**
-     * Counts the total number of opportunities posted by an organization.
+     * Counts all opportunities created by an organization.
      */
     public long countByOrganization(User organization) {
         return opportunityRepository.countByOrganization(organization);
@@ -190,5 +150,12 @@ public class OpportunityService {
      */
     public long countByOrganizationAndStatus(User organization, OpportunityStatus status) {
         return opportunityRepository.countByOrganizationAndStatus(organization, status);
+    }
+
+    /**
+     * Counts active opportunities for an organization.
+     */
+    public long countActiveByOrganization(User organization) {
+        return opportunityRepository.countByOrganizationAndStatus(organization, OpportunityStatus.APPROVED);
     }
 }
