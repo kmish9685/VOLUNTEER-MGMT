@@ -6,7 +6,7 @@ package com.volunteer.platform.model;
  * ---------------------------------------------------------------------
  * Defines the three user roles supported by the volunteer platform:
  * 1. ADMIN - Full system control, approvals, user management, and settings.
- * 2. ORGANIZATION - Creates volunteering events, takes attendance, approves hours.
+ * 2. ORGANIZATION - Creates volunteering events, takes attendance.
  * 3. VOLUNTEER - Browses events, signs up, logs volunteer hours, messages orgs.
  * =====================================================================
  */

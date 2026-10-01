@@ -23,8 +23,8 @@
                 <a class="btn btn-outline-light btn-lg px-4" th:href="@{/login}" th:if="${currentUser == null}">
                     <i class="bi bi-box-arrow-in-right me-1"></i> Organization Sign In
                 </a>
-                <a class="btn btn-light btn-lg px-4 fw-semibold" th:href="@{/volunteer/browse}" th:if="${currentUser != null}">
-                    <i class="bi bi-compass me-1"></i> Explore Opportunities
+                <a class="btn btn-light btn-lg px-4 fw-semibold" th:href="@{/volunteer/browse}" th:if="${currentUser == null or currentUser.role.name() == 'VOLUNTEER'}">
+                    <i class="bi bi-compass me-1"></i> Browse Opportunities
                 </a>
             </div>
         </div>
@@ -67,7 +67,7 @@
                         </div>
                         <div class="text-start">
                             <h2 class="fw-bold mb-0" th:text="${#numbers.formatDecimal(totalHours, 1, 1)}">450+</h2>
-                            <p class="text-muted mb-0 small text-uppercase fw-semibold">Approved Hours</p>
+                            <p class="text-muted mb-0 small text-uppercase fw-semibold">Total Hours</p>
                         </div>
                     </div>
                 </div>
@@ -82,7 +82,7 @@
                 <span class="badge bg-primary-subtle text-primary mb-2 fw-semibold px-2 py-1">Community Drives</span>
                 <h2 class="fw-bold mb-0">Upcoming Volunteering Opportunities</h2>
             </div>
-            <a class="btn btn-outline-primary" th:href="@{/volunteer/browse}">
+            <a class="btn btn-outline-primary" th:href="@{/volunteer/browse}" th:if="${currentUser == null or currentUser.role.name() == 'VOLUNTEER'}">
                 View All <i class="bi bi-arrow-right ms-1"></i>
             </a>
         </div>
@@ -122,7 +122,7 @@
                             <small class="text-muted">
                                 <i class="bi bi-clock me-1"></i> <span th:text="${opp.startTime}">09:00</span> - <span th:text="${opp.endTime}">13:00</span>
                             </small>
-                            <a class="btn btn-sm btn-primary" th:href="@{'/volunteer/opportunity/' + ${opp.id}}">
+                            <a class="btn btn-sm btn-primary" th:href="@{'/volunteer/opportunity/' + ${opp.id}}" th:if="${currentUser == null or currentUser.role.name() == 'VOLUNTEER'}">
                                 View Details <i class="bi bi-arrow-right ms-1"></i>
                             </a>
                         </div>
