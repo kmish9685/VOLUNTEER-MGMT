@@ -22,12 +22,12 @@ import java.util.Map;
  * VolunteerController (Presentation Layer)
  * ---------------------------------------------------------------------
  * Handles all volunteer actions (/volunteer/**):
- * - Volunteer Dashboard (approved hours, registrations, upcoming events)
+ * - Volunteer Dashboard (total hours, registrations, upcoming events)
  * - Browse & Search approved upcoming opportunities
  * - Detailed opportunity view with capacity and organization bio
  * - Sign-up and Cancellation workflows
- * - Hour logging for attended events
- * - Complete participation and service credential history
+ * - Hour logging for attended events (hours count immediately)
+ * - Complete participation history with total hours
  * =====================================================================
  */
 @Controller
@@ -53,12 +53,12 @@ public class VolunteerController {
     }
 
     /**
-     * Displays the Volunteer Dashboard with summary counters and upcoming registered events.
+     * Displays the Volunteer Dashboard with simple counts and upcoming events.
      */
     @GetMapping("/dashboard")
     public String showDashboard(HttpSession session, Model model) {
         User volunteer = (User) session.getAttribute("loggedInUser");
-        model.addAttribute("totalApprovedHours", hourLogService.getTotalApprovedHoursForVolunteer(volunteer));
+        model.addAttribute("totalHours", hourLogService.getTotalHoursForVolunteer(volunteer));
         model.addAttribute("totalEventsRegistered", registrationService.countByVolunteerAndStatus(volunteer, RegistrationStatus.REGISTERED));
         model.addAttribute("totalEventsAttended", registrationService.countByVolunteerAndStatus(volunteer, RegistrationStatus.ATTENDED));
 
@@ -75,7 +75,7 @@ public class VolunteerController {
     }
 
     /**
-     * Displays the opportunity browser for approved upcoming events with live slot tracking.
+     * Displays the opportunity browser for approved upcoming events.
      */
     @GetMapping("/browse")
     public String browseOpportunities(@RequestParam(value = "search", required = false) String search,
@@ -182,6 +182,7 @@ public class VolunteerController {
 
     /**
      * Processes submission of volunteer service hours.
+     * Hours are recorded immediately — no approval step required.
      */
     @PostMapping("/log-hours")
     public String processLogHours(@RequestParam("registrationId") Long registrationId,
@@ -192,7 +193,7 @@ public class VolunteerController {
         try {
             User volunteer = (User) session.getAttribute("loggedInUser");
             hourLogService.logHours(registrationId, hours, workDescription, volunteer);
-            redirectAttributes.addFlashAttribute("successMessage", "Hours logged successfully! Awaiting organization approval.");
+            redirectAttributes.addFlashAttribute("successMessage", "Hours logged successfully!");
             return "redirect:/volunteer/history";
         } catch (Exception ex) {
             redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
@@ -201,7 +202,7 @@ public class VolunteerController {
     }
 
     /**
-     * Displays complete participation history and hour logs.
+     * Displays complete participation history with total hours.
      */
     @GetMapping("/history")
     public String showParticipationHistory(HttpSession session, Model model) {
@@ -217,7 +218,7 @@ public class VolunteerController {
         }
 
         model.addAttribute("historyRows", historyRows);
-        model.addAttribute("totalApprovedHours", hourLogService.getTotalApprovedHoursForVolunteer(volunteer));
+        model.addAttribute("totalHours", hourLogService.getTotalHoursForVolunteer(volunteer));
         return "volunteer/history";
     }
 }

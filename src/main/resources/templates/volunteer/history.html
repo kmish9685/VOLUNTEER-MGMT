@@ -19,8 +19,8 @@
             </div>
             <div class="text-end">
                 <span class="badge bg-success-subtle text-success fs-6 px-3 py-2 border border-success-subtle">
-                    <i class="bi bi-award-fill me-1"></i> Total Approved:
-                    <strong th:text="${#numbers.formatDecimal(totalApprovedHours, 1, 1)}">0.0</strong> hrs
+                    <i class="bi bi-award-fill me-1"></i> Total Hours:
+                    <strong th:text="${#numbers.formatDecimal(totalHours, 1, 1)}">0.0</strong> hrs
                 </span>
             </div>
         </div>
@@ -73,10 +73,7 @@
                                         <div class="fw-bold text-dark">
                                             <span th:text="${row.hourLog.hours}">4.0</span> hrs
                                         </div>
-                                        <span class="badge"
-                                              th:classappend="${row.hourLog.status.name() == 'APPROVED' ? 'badge-approved' :
-                                                               (row.hourLog.status.name() == 'PENDING' ? 'badge-pending' : 'badge-rejected')}"
-                                              th:text="${row.hourLog.status}">APPROVED</span>
+                                        <span class="badge bg-success-subtle text-success">Logged</span>
                                     </div>
                                     <div th:unless="${row.hourLog != null}">
                                         <span class="text-muted small">Not submitted</span>

@@ -14,14 +14,14 @@ import java.util.Optional;
  * =====================================================================
  * HourLogService (Business Logic Layer)
  * ---------------------------------------------------------------------
- * Handles volunteer service hour submissions and organization approvals:
+ * Handles volunteer service hour submissions.
+ * Hours are counted immediately when submitted — no approval step.
  * - Only permits hour submissions for registrations marked ATTENDED
  * - Enforces the "max_hours_per_log" system setting constraint
- * - Allows Organizations to review (APPROVE / REJECT) submitted hours
- * - Aggregates approved hours for platform, organization, and volunteer stats
+ * - Aggregates total hours for platform, organization, and volunteer stats
  * =====================================================================
  */
-@SuppressWarnings("null") // Spring Data JPA's findById(Long) is always called with non-null ids from path variables
+@SuppressWarnings("null")
 @Service
 public class HourLogService {
 
@@ -44,7 +44,8 @@ public class HourLogService {
     }
 
     /**
-     * Submits service hours logged by a volunteer who attended an event.
+     * Submits or updates service hours logged by a volunteer who attended an event.
+     * Hours are recorded immediately — no organization approval required.
      */
     @Transactional
     public HourLog logHours(Long registrationId, double hours, String workDescription, User volunteer) {
@@ -72,44 +73,17 @@ public class HourLogService {
         HourLog logEntry;
         if (existingOpt.isPresent()) {
             logEntry = existingOpt.get();
-            if (logEntry.getStatus() == HourLogStatus.APPROVED) {
-                throw new IllegalStateException("Hours for this event have already been approved and cannot be modified.");
-            }
             logEntry.setHours(hours);
             logEntry.setWorkDescription(workDescription != null ? workDescription.trim() : null);
-            logEntry.setStatus(HourLogStatus.PENDING);
             logEntry.setLoggedAt(LocalDateTime.now());
         } else {
-            logEntry = new HourLog(registration, hours, workDescription != null ? workDescription.trim() : null, HourLogStatus.PENDING);
+            logEntry = new HourLog(registration, hours, workDescription != null ? workDescription.trim() : null);
         }
 
         HourLog saved = hourLogRepository.save(logEntry);
         activityLogService.log(volunteer, "Volunteer logged " + hours + " hours for: " +
                 registration.getOpportunity().getTitle());
         return saved;
-    }
-
-    /**
-     * Allows hosting organization to APPROVE or REJECT a submitted hour log entry.
-     */
-    @Transactional
-    public void reviewHours(Long hourLogId, HourLogStatus newStatus, User organization) {
-        HourLog logEntry = hourLogRepository.findById(hourLogId)
-                .orElseThrow(() -> new IllegalArgumentException("Hour log not found with id: " + hourLogId));
-
-        User eventOrg = logEntry.getRegistration().getOpportunity().getOrganization();
-        if (!eventOrg.getId().equals(organization.getId())) {
-            throw new IllegalArgumentException("You are not authorized to review hours for this event.");
-        }
-
-        if (newStatus != HourLogStatus.APPROVED && newStatus != HourLogStatus.REJECTED) {
-            throw new IllegalArgumentException("Status must be set to either APPROVED or REJECTED.");
-        }
-
-        logEntry.setStatus(newStatus);
-        hourLogRepository.save(logEntry);
-        activityLogService.log(organization, "Organization " + newStatus + " " + logEntry.getHours() +
-                " hours for volunteer: " + logEntry.getRegistration().getVolunteer().getFullName());
     }
 
     /**
@@ -120,13 +94,6 @@ public class HourLogService {
     }
 
     /**
-     * Retrieves all pending hour logs for events belonging to an organization.
-     */
-    public List<HourLog> getPendingHoursForOrganization(User organization) {
-        return hourLogRepository.findByOrganizationAndStatus(organization, HourLogStatus.PENDING);
-    }
-
-    /**
      * Retrieves all hour logs submitted by a volunteer.
      */
     public List<HourLog> getHoursByVolunteer(User volunteer) {
@@ -134,37 +101,30 @@ public class HourLogService {
     }
 
     /**
-     * Counts pending hour submissions awaiting an organization's review.
+     * Calculates total volunteer service hours across the entire platform.
      */
-    public long countPendingHoursForOrganization(User organization) {
-        return hourLogRepository.countByOrganizationAndStatus(organization, HourLogStatus.PENDING);
+    public double getTotalHoursPlatform() {
+        return hourLogRepository.sumAllHours();
     }
 
     /**
-     * Calculates total sum of approved volunteer service hours across the platform.
+     * Calculates total service hours logged by a specific volunteer.
      */
-    public double getTotalApprovedHoursPlatform() {
-        return hourLogRepository.sumHoursByStatus(HourLogStatus.APPROVED);
+    public double getTotalHoursForVolunteer(User volunteer) {
+        return hourLogRepository.sumHoursByVolunteer(volunteer);
     }
 
     /**
-     * Calculates total sum of approved volunteer service hours for a specific volunteer.
+     * Calculates total service hours generated by an organization's events.
      */
-    public double getTotalApprovedHoursForVolunteer(User volunteer) {
-        return hourLogRepository.sumHoursByVolunteerAndStatus(volunteer, HourLogStatus.APPROVED);
+    public double getTotalHoursForOrganization(User organization) {
+        return hourLogRepository.sumHoursByOrganization(organization);
     }
 
     /**
-     * Calculates total sum of approved volunteer service hours generated by an organization.
+     * Calculates total service hours logged for a single opportunity event.
      */
-    public double getTotalApprovedHoursForOrganization(User organization) {
-        return hourLogRepository.sumHoursByOrganizationAndStatus(organization, HourLogStatus.APPROVED);
-    }
-
-    /**
-     * Calculates total sum of approved volunteer hours generated by a single opportunity event.
-     */
-    public double getTotalApprovedHoursForOpportunity(Opportunity opportunity) {
-        return hourLogRepository.sumHoursByOpportunityAndStatus(opportunity, HourLogStatus.APPROVED);
+    public double getTotalHoursForOpportunity(Opportunity opportunity) {
+        return hourLogRepository.sumHoursByOpportunity(opportunity);
     }
 }

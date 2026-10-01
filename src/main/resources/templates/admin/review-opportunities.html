@@ -11,100 +11,164 @@
 
     <div class="container my-4">
         <!-- Header -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <span class="badge bg-warning-subtle text-warning-emphasis fw-semibold px-2 py-1">Moderation Queue</span>
-                <h2 class="fw-bold mb-0">Pending Opportunity Approvals</h2>
-            </div>
-            <a th:href="@{/admin/opportunities}" class="btn btn-outline-secondary">
-                <i class="bi bi-list-ul me-1"></i> View All Opportunities
-            </a>
+        <div class="mb-4">
+            <span class="badge bg-warning-subtle text-warning-emphasis fw-semibold px-2 py-1">Moderation &amp; Review</span>
+            <h2 class="fw-bold mb-0">Opportunity Management &amp; Approvals</h2>
+            <p class="text-muted small mb-0">Review pending events submitted by organizations, or inspect the status of all opportunities</p>
         </div>
 
-        <!-- Empty State -->
-        <div class="card p-5 text-center bg-white shadow-sm" th:if="${#lists.isEmpty(pendingOpportunities)}">
-            <div class="stat-icon mx-auto mb-3 bg-success-subtle text-success">
-                <i class="bi bi-check-all fs-2"></i>
+        <!-- Section 1: Pending Approvals (on top) -->
+        <div class="mb-5">
+            <div class="d-flex align-items-center gap-2 mb-3">
+                <h4 class="fw-bold mb-0 text-dark">
+                    <i class="bi bi-hourglass-split text-warning me-1"></i> Pending Approvals
+                </h4>
+                <span class="badge bg-warning text-dark rounded-pill" th:text="${#lists.size(pendingOpportunities)}">0</span>
             </div>
-            <h4 class="fw-bold">No Pending Opportunities!</h4>
-            <p class="text-muted mb-0">All submitted volunteering events have been reviewed and approved or rejected.</p>
-        </div>
 
-        <!-- Pending Cards List -->
-        <div class="row g-4" th:unless="${#lists.isEmpty(pendingOpportunities)}">
-            <div class="col-lg-6" th:each="opp : ${pendingOpportunities}">
-                <div class="card h-100 bg-white shadow-sm border-top border-4 border-warning">
-                    <div class="card-body d-flex flex-column">
-                        <div class="d-flex justify-content-between align-items-start mb-2">
-                            <span class="badge bg-warning-subtle text-warning-emphasis fw-semibold">
-                                <i class="bi bi-hourglass-split me-1"></i> PENDING REVIEW
-                            </span>
-                            <span class="badge bg-light text-dark border">
-                                <i class="bi bi-people me-1"></i> <span th:text="${opp.totalSlots}">20</span> Slots
-                            </span>
-                        </div>
+            <!-- Empty State for Pending -->
+            <div class="card p-4 text-center bg-white shadow-sm mb-4" th:if="${#lists.isEmpty(pendingOpportunities)}">
+                <div class="stat-icon mx-auto mb-2 bg-success-subtle text-success" style="width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; border-radius: 50%;">
+                    <i class="bi bi-check2-all fs-4"></i>
+                </div>
+                <h5 class="fw-bold mb-1">All Caught Up!</h5>
+                <p class="text-muted small mb-0">No opportunities are waiting for review.</p>
+            </div>
 
-                        <h4 class="fw-bold text-dark mb-1" th:text="${opp.title}">Slum Youth Skill Training</h4>
-                        <div class="small text-muted mb-3">
-                            <i class="bi bi-building me-1 text-primary"></i>
-                            <span class="fw-semibold text-secondary" th:text="${opp.organization.fullName}">Helping Hands NGO</span>
-                        </div>
+            <!-- Pending Cards Grid -->
+            <div class="row g-4" th:unless="${#lists.isEmpty(pendingOpportunities)}">
+                <div class="col-lg-6" th:each="opp : ${pendingOpportunities}">
+                    <div class="card h-100 bg-white shadow-sm border-top border-4 border-warning">
+                        <div class="card-body d-flex flex-column">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <span class="badge bg-warning-subtle text-warning-emphasis fw-semibold">
+                                    <i class="bi bi-hourglass-split me-1"></i> PENDING REVIEW
+                                </span>
+                                <span class="badge bg-light text-dark border">
+                                    <i class="bi bi-people me-1"></i> <span th:text="${opp.totalSlots}">20</span> Slots
+                                </span>
+                            </div>
 
-                        <p class="card-text text-secondary mb-3 flex-grow-1" th:text="${opp.description}">
-                            Description text...
-                        </p>
+                            <h4 class="fw-bold text-dark mb-1" th:text="${opp.title}">Slum Youth Skill Training</h4>
+                            <div class="small text-muted mb-3">
+                                <i class="bi bi-building me-1 text-primary"></i>
+                                <span class="fw-semibold text-secondary" th:text="${opp.organization.fullName}">Helping Hands NGO</span>
+                            </div>
 
-                        <div class="bg-light p-3 rounded mb-3 small">
-                            <div class="row g-2">
-                                <div class="col-6">
-                                    <i class="bi bi-geo-alt-fill text-danger me-1"></i>
-                                    <strong>Location:</strong> <span th:text="${opp.location}">Sector 4</span>
-                                </div>
-                                <div class="col-6">
-                                    <i class="bi bi-calendar-event text-primary me-1"></i>
-                                    <strong>Date:</strong> <span th:text="${opp.eventDate}">2026-10-20</span>
-                                </div>
-                                <div class="col-6">
-                                    <i class="bi bi-clock text-info me-1"></i>
-                                    <strong>Time:</strong> <span th:text="${opp.startTime}">09:00</span> - <span th:text="${opp.endTime}">13:00</span>
-                                </div>
-                                <div class="col-6">
-                                    <i class="bi bi-calendar-plus text-muted me-1"></i>
-                                    <strong>Submitted:</strong> <span th:text="${#temporals.format(opp.createdAt, 'yyyy-MM-dd')}">2026-09-28</span>
+                            <p class="card-text text-secondary mb-3 flex-grow-1" th:text="${opp.description}">
+                                Description text...
+                            </p>
+
+                            <div class="bg-light p-3 rounded mb-3 small">
+                                <div class="row g-2">
+                                    <div class="col-6">
+                                        <i class="bi bi-geo-alt-fill text-danger me-1"></i>
+                                        <strong>Location:</strong> <span th:text="${opp.location}">Sector 4</span>
+                                    </div>
+                                    <div class="col-6">
+                                        <i class="bi bi-calendar-event text-primary me-1"></i>
+                                        <strong>Date:</strong> <span th:text="${opp.eventDate}">2026-10-20</span>
+                                    </div>
+                                    <div class="col-6">
+                                        <i class="bi bi-clock text-info me-1"></i>
+                                        <strong>Time:</strong> <span th:text="${opp.startTime}">09:00</span> - <span th:text="${opp.endTime}">13:00</span>
+                                    </div>
+                                    <div class="col-6">
+                                        <i class="bi bi-calendar-plus text-muted me-1"></i>
+                                        <strong>Submitted:</strong> <span th:text="${#temporals.format(opp.createdAt, 'yyyy-MM-dd')}">2026-09-28</span>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
 
-                        <!-- Review Action Form -->
-                        <div class="border-top pt-3">
-                            <div class="row g-2">
-                                <!-- Approve Form -->
-                                <div class="col-sm-4">
-                                    <form th:action="@{'/admin/opportunities/review/' + ${opp.id}}" method="post">
-                                        <input type="hidden" name="status" value="APPROVED">
-                                        <button type="submit" class="btn btn-success w-100"
-                                                onclick="return confirm('Approve this opportunity for public volunteer signup?');">
-                                            <i class="bi bi-check-lg me-1"></i> Approve
-                                        </button>
-                                    </form>
-                                </div>
+                            <!-- Review Action Form -->
+                            <div class="border-top pt-3">
+                                <div class="row g-2">
+                                    <!-- Approve Form -->
+                                    <div class="col-sm-4">
+                                        <form th:action="@{'/admin/opportunities/review/' + ${opp.id}}" method="post">
+                                            <input type="hidden" name="status" value="APPROVED">
+                                            <button type="submit" class="btn btn-success w-100"
+                                                    onclick="return confirm('Approve this opportunity for public volunteer signup?');">
+                                                <i class="bi bi-check-lg me-1"></i> Approve
+                                            </button>
+                                        </form>
+                                    </div>
 
-                                <!-- Reject Form with Remark Toggle -->
-                                <div class="col-sm-8">
-                                    <form th:action="@{'/admin/opportunities/review/' + ${opp.id}}" method="post" class="d-flex gap-2">
-                                        <input type="hidden" name="status" value="REJECTED">
-                                        <input type="text" name="adminRemark" class="form-control form-control-sm"
-                                               placeholder="Rejection remark (required)" required>
-                                        <button type="submit" class="btn btn-danger btn-sm text-nowrap"
-                                                onclick="return confirm('Reject this opportunity?');">
-                                            <i class="bi bi-x-lg me-1"></i> Reject
-                                        </button>
-                                    </form>
+                                    <!-- Reject Form with Remark -->
+                                    <div class="col-sm-8">
+                                        <form th:action="@{'/admin/opportunities/review/' + ${opp.id}}" method="post" class="d-flex gap-2">
+                                            <input type="hidden" name="status" value="REJECTED">
+                                            <input type="text" name="adminRemark" class="form-control form-control-sm"
+                                                   placeholder="Rejection remark (required)" required>
+                                            <button type="submit" class="btn btn-danger btn-sm text-nowrap"
+                                                    onclick="return confirm('Reject this opportunity?');">
+                                                <i class="bi bi-x-lg me-1"></i> Reject
+                                            </button>
+                                        </form>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
 
+                        </div>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 2: All Opportunities Table (below) -->
+        <div class="card bg-white shadow-sm">
+            <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+                <h5 class="fw-bold mb-0">
+                    <i class="bi bi-collection text-primary me-2"></i> All Opportunities
+                </h5>
+                <span class="text-muted small" th:text="${#lists.size(allOpportunities)} + ' total opportunities'">0 total</span>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th scope="col">Title</th>
+                                <th scope="col">Organization</th>
+                                <th scope="col">Date &amp; Time</th>
+                                <th scope="col">Location</th>
+                                <th scope="col" class="text-center">Slots</th>
+                                <th scope="col">Status</th>
+                                <th scope="col">Admin Remark</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:if="${#lists.isEmpty(allOpportunities)}">
+                                <td colspan="7" class="text-center py-4 text-muted">No opportunities in the system.</td>
+                            </tr>
+                            <tr th:each="opp : ${allOpportunities}">
+                                <td>
+                                    <div class="fw-bold text-dark" th:text="${opp.title}">Title</div>
+                                    <small class="text-muted text-truncate d-inline-block" style="max-width: 250px;" th:text="${opp.description}">Description</small>
+                                </td>
+                                <td>
+                                    <span class="text-secondary fw-semibold" th:text="${opp.organization.fullName}">Organization</span>
+                                </td>
+                                <td>
+                                    <div class="fw-semibold text-dark" th:text="${opp.eventDate}">2026-10-15</div>
+                                    <small class="text-muted" th:text="${opp.startTime + ' - ' + opp.endTime}">09:00 - 13:00</small>
+                                </td>
+                                <td>
+                                    <small class="text-secondary"><i class="bi bi-geo-alt me-1 text-danger"></i><span th:text="${opp.location}">Location</span></small>
+                                </td>
+                                <td class="text-center fw-bold" th:text="${opp.totalSlots}">20</td>
+                                <td>
+                                    <span class="badge"
+                                          th:classappend="${opp.status.name() == 'APPROVED' ? 'bg-success-subtle text-success' :
+                                                           (opp.status.name() == 'PENDING' ? 'bg-warning-subtle text-warning-emphasis' : 'bg-danger-subtle text-danger')}"
+                                          th:text="${opp.status}">STATUS</span>
+                                </td>
+                                <td>
+                                    <span class="text-muted small" th:text="${opp.adminRemark != null && !#strings.isEmpty(opp.adminRemark) ? opp.adminRemark : '—'}">—</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>

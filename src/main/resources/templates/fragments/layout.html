@@ -54,20 +54,13 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" th:href="@{/admin/opportunities}"><i class="bi bi-calendar-event me-1"></i> All Events</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" th:href="@{/admin/participation}"><i class="bi bi-clipboard-data me-1"></i> Participation</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" th:href="@{/admin/activity-logs}"><i class="bi bi-journal-text me-1"></i> Logs</a>
+                            <a class="nav-link" th:href="@{/admin/monitoring}"><i class="bi bi-clipboard-data me-1"></i> Monitoring</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" th:href="@{/admin/settings}"><i class="bi bi-gear me-1"></i> Settings</a>
                         </li>
                     </th:block>
 
-                    <!-- ORGANIZATION Links -->
                     <th:block th:if="${currentUser != null and currentUser.role.name() == 'ORGANIZATION'}">
                         <li class="nav-item">
                             <a class="nav-link" th:href="@{/org/dashboard}"><i class="bi bi-speedometer2 me-1"></i> Dashboard</a>
@@ -77,9 +70,6 @@
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" th:href="@{/org/opportunities/new}"><i class="bi bi-plus-circle me-1"></i> Post Event</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" th:href="@{/org/hours}"><i class="bi bi-clock-history me-1"></i> Hour Approvals</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" th:href="@{/org/report}"><i class="bi bi-file-earmark-bar-graph me-1"></i> Report</a>

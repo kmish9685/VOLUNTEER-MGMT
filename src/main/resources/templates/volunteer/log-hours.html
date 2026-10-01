@@ -40,7 +40,6 @@
                         <div th:if="${existingLog != null}" class="alert alert-info py-2 small mb-3">
                             <i class="bi bi-info-circle me-1"></i>
                             You previously submitted <strong th:text="${existingLog.hours}">4.0</strong> hours.
-                            Status: <strong th:text="${existingLog.status}">PENDING</strong>.
                             Submitting this form will update your entry.
                         </div>
 
@@ -75,7 +74,7 @@
                                     <i class="bi bi-arrow-left me-1"></i> Cancel
                                 </a>
                                 <button type="submit" class="btn btn-primary px-4 fw-semibold">
-                                    <i class="bi bi-check2-circle me-1"></i> Submit for Approval
+                                    <i class="bi bi-check2-circle me-1"></i> Save Hours
                                 </button>
                             </div>
                         </form>

@@ -17,10 +17,10 @@ import java.time.LocalTime;
  * Automatically runs once when the Spring Boot application starts.
  * If the database is empty, it populates demo data:
  * - 1 Admin, 2 Organizations, 3 Volunteers
- * - All 4 System Settings
+ * - 3 System Settings (platform_name, allow_registrations, max_hours_per_log)
  * - 6 Opportunities (Pending, Approved Future, Approved Past, Rejected)
  * - Registrations, Attendance, Hour Logs, Messages, and Activity Logs
- * - Prints demo login credentials to the console for easy testing.
+ * All event dates are upcoming so they appear on the volunteer browse page.
  * =====================================================================
  */
 @Component
@@ -72,7 +72,7 @@ public class DataLoader implements CommandLineRunner {
     }
 
     /**
-     * Seeds default system settings required by the platform.
+     * Seeds the 3 system settings used by the platform.
      */
     private void seedSystemSettings() {
         systemSettingRepository.save(new SystemSetting(
@@ -81,8 +81,6 @@ public class DataLoader implements CommandLineRunner {
                 "allow_registrations", "true", "Controls whether new public registrations are open"));
         systemSettingRepository.save(new SystemSetting(
                 "max_hours_per_log", "12", "Maximum volunteer service hours permitted in a single log entry"));
-        systemSettingRepository.save(new SystemSetting(
-                "auto_approve_opportunities", "false", "Automatically approves newly posted opportunities if true"));
     }
 
     /**
@@ -157,8 +155,8 @@ public class DataLoader implements CommandLineRunner {
 
         LocalDate today = LocalDate.now();
 
-        // 4. Seed ~6 Opportunities
-        // Opp 1: Approved Future (Green Earth)
+        // 4. Seed Opportunities
+        // Opp 1: Approved Upcoming (Green Earth)
         Opportunity opp1 = new Opportunity(
                 "Community Tree Plantation Drive",
                 "Join us to plant 500 indigenous saplings in the city botanical corridor. Shovels, compost, and gloves provided.",
@@ -172,7 +170,7 @@ public class DataLoader implements CommandLineRunner {
         );
         opportunityRepository.save(opp1);
 
-        // Opp 2: Approved Future (Green Earth)
+        // Opp 2: Approved Upcoming (Green Earth)
         Opportunity opp2 = new Opportunity(
                 "Beach Cleanup & Marine Plastic Awareness",
                 "Morning cleanup drive along the coastline to remove plastic waste and educate local beach visitors on waste segregation.",
@@ -186,7 +184,7 @@ public class DataLoader implements CommandLineRunner {
         );
         opportunityRepository.save(opp2);
 
-        // Opp 3: Approved Future (Helping Hands)
+        // Opp 3: Approved Upcoming (Helping Hands)
         Opportunity opp3 = new Opportunity(
                 "Food Distribution & Hunger Relief Camp",
                 "Distribute nutritious cooked meal packages and drinking water to homeless families and migrant daily wagers.",
@@ -200,7 +198,7 @@ public class DataLoader implements CommandLineRunner {
         );
         opportunityRepository.save(opp3);
 
-        // Opp 4: Approved Past (Helping Hands)
+        // Opp 4: Approved Past (Helping Hands) — for attended registration demo
         Opportunity opp4 = new Opportunity(
                 "Old Age Home Digital Literacy Workshop",
                 "Taught senior citizens basic smartphone skills, video calling family, and staying safe from online financial frauds.",
@@ -244,7 +242,7 @@ public class DataLoader implements CommandLineRunner {
         opportunityRepository.save(opp6);
 
         // 5. Seed Registrations & Attendance
-        // For Past Event (opp4):
+        // For Past Event (opp4): Rahul ATTENDED, Priya ATTENDED, Aman ABSENT
         Registration reg1 = new Registration(vol1, opp4, RegistrationStatus.ATTENDED);
         reg1.setRegisteredAt(LocalDateTime.now().minusDays(8));
         registrationRepository.save(reg1);
@@ -257,7 +255,7 @@ public class DataLoader implements CommandLineRunner {
         reg3.setRegisteredAt(LocalDateTime.now().minusDays(6));
         registrationRepository.save(reg3);
 
-        // For Future Events:
+        // For Upcoming Events
         Registration reg4 = new Registration(vol1, opp1, RegistrationStatus.REGISTERED);
         registrationRepository.save(reg4);
 
@@ -267,22 +265,20 @@ public class DataLoader implements CommandLineRunner {
         Registration reg6 = new Registration(vol3, opp3, RegistrationStatus.REGISTERED);
         registrationRepository.save(reg6);
 
-        // 6. Seed Hour Logs
-        // Rahul's attended event hours (APPROVED)
+        // 6. Seed Hour Logs (no status — counts immediately)
+        // Rahul logged hours for the past attended event
         HourLog hour1 = new HourLog(
                 reg1,
                 4.0,
-                "Assisted 8 senior citizens in setting up WhatsApp video calling and enabled two-factor authentication on their phones.",
-                HourLogStatus.APPROVED
+                "Assisted 8 senior citizens in setting up WhatsApp video calling and enabled two-factor authentication on their phones."
         );
         hourLogRepository.save(hour1);
 
-        // Priya's attended event hours (PENDING approval)
+        // Priya also logged hours
         HourLog hour2 = new HourLog(
                 reg2,
                 4.0,
-                "Helped seniors write notes, browse YouTube audio playlists, and answered questions regarding online banking fraud alerts.",
-                HourLogStatus.PENDING
+                "Helped seniors write notes, browse YouTube audio playlists, and answered questions regarding online banking fraud alerts."
         );
         hourLogRepository.save(hour2);
 
@@ -315,7 +311,6 @@ public class DataLoader implements CommandLineRunner {
         activityLogRepository.save(new ActivityLog(vol1, "Signed up for: Community Tree Plantation Drive"));
         activityLogRepository.save(new ActivityLog(org2, "Attendance marked: ATTENDED for Rahul Verma in Old Age Home Workshop"));
         activityLogRepository.save(new ActivityLog(vol1, "Logged 4.0 hours for Old Age Home Digital Literacy Workshop"));
-        activityLogRepository.save(new ActivityLog(org2, "Approved 4.0 volunteer hours for Rahul Verma"));
         activityLogRepository.save(new ActivityLog(admin, "Opportunity REJECTED with remark: Night Street Animal Rescue Operation"));
     }
 

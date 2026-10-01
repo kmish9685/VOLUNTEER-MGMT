@@ -15,12 +15,12 @@ import java.util.List;
  * AdminController (Presentation Layer)
  * ---------------------------------------------------------------------
  * Handles all administrative operations (/admin/**):
- * - KPI Metrics Dashboard and latest audit feed
+ * - KPI Metrics Dashboard
  * - User Management (Create, Edit, Block/Unblock, Delete)
  * - Review Opportunities (Approve or Reject with Admin Remarks)
- * - Global Participation Monitoring (All registrations)
- * - System Settings Management (Platform name, limits, flags)
- * - Complete Activity Log audit trail
+ *   Shows PENDING on top, all others below — one combined page
+ * - Monitoring: all registrations + recent activity log — one page
+ * - System Settings (3 settings: platform_name, allow_registrations, max_hours_per_log)
  * =====================================================================
  */
 @Controller
@@ -52,7 +52,7 @@ public class AdminController {
     }
 
     /**
-     * Displays the Admin Dashboard with summary KPI counters and recent activity logs.
+     * Displays the Admin Dashboard with simple KPI counts.
      */
     @GetMapping("/dashboard")
     public String showDashboard(Model model) {
@@ -60,9 +60,8 @@ public class AdminController {
         model.addAttribute("totalOrganizations", userService.countOrganizations());
         model.addAttribute("pendingOpportunitiesCount", opportunityService.countByStatus(OpportunityStatus.PENDING));
         model.addAttribute("approvedOpportunitiesCount", opportunityService.countByStatus(OpportunityStatus.APPROVED));
-        model.addAttribute("rejectedOpportunitiesCount", opportunityService.countByStatus(OpportunityStatus.REJECTED));
         model.addAttribute("totalRegistrations", registrationService.countTotalRegistrations());
-        model.addAttribute("totalApprovedHours", hourLogService.getTotalApprovedHoursPlatform());
+        model.addAttribute("totalHours", hourLogService.getTotalHoursPlatform());
         model.addAttribute("recentLogs", activityLogService.getLatestLogs());
         return "admin/dashboard";
     }
@@ -185,12 +184,21 @@ public class AdminController {
     }
 
     /**
-     * Lists all opportunities waiting for Admin review (status PENDING).
+     * Displays all opportunities: PENDING on top, others below — combined review page.
      */
     @GetMapping("/opportunities/review")
-    public String showPendingOpportunities(Model model) {
+    public String showReviewOpportunities(Model model) {
         model.addAttribute("pendingOpportunities", opportunityService.getPendingOpportunities());
+        model.addAttribute("allOpportunities", opportunityService.getAllOpportunities());
         return "admin/review-opportunities";
+    }
+
+    /**
+     * Redirect old /admin/opportunities URL to the review page.
+     */
+    @GetMapping("/opportunities")
+    public String redirectToReview() {
+        return "redirect:/admin/opportunities/review";
     }
 
     /**
@@ -213,30 +221,30 @@ public class AdminController {
     }
 
     /**
-     * Displays all opportunities across all statuses for comprehensive oversight.
+     * Displays the Monitoring page: all registrations + recent activity log.
+     * Replaces the old separate Participation and Activity Logs pages.
      */
-    @GetMapping("/opportunities")
-    public String showAllOpportunities(Model model) {
-        model.addAttribute("opportunities", opportunityService.getAllOpportunities());
-        return "admin/opportunities";
+    @GetMapping("/monitoring")
+    public String showMonitoring(Model model) {
+        model.addAttribute("registrations", registrationService.getAllRegistrations());
+        model.addAttribute("logs", activityLogService.getAllLogs());
+        return "admin/monitoring";
     }
 
     /**
-     * Displays all volunteer registrations across all events for participation monitoring.
+     * Redirect old /admin/participation URL to monitoring.
      */
     @GetMapping("/participation")
-    public String showParticipation(Model model) {
-        model.addAttribute("registrations", registrationService.getAllRegistrations());
-        return "admin/participation";
+    public String redirectParticipation() {
+        return "redirect:/admin/monitoring";
     }
 
     /**
-     * Displays the complete system activity log history.
+     * Redirect old /admin/activity-logs URL to monitoring.
      */
     @GetMapping("/activity-logs")
-    public String showActivityLogs(Model model) {
-        model.addAttribute("logs", activityLogService.getAllLogs());
-        return "admin/activity-logs";
+    public String redirectActivityLogs() {
+        return "redirect:/admin/monitoring";
     }
 
     /**

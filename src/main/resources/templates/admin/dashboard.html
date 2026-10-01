@@ -75,7 +75,7 @@
                 </div>
             </div>
 
-            <!-- Total Approved Hours -->
+            <!-- Total Service Hours -->
             <div class="col-sm-6 col-lg-3">
                 <div class="card p-3 stat-card bg-white card-hover" style="border-left-color: #16a34a;">
                     <div class="d-flex align-items-center gap-3">
@@ -83,8 +83,8 @@
                             <i class="bi bi-award-fill"></i>
                         </div>
                         <div>
-                            <h3 class="fw-bold mb-0" th:text="${#numbers.formatDecimal(totalApprovedHours, 1, 1)}">0.0</h3>
-                            <span class="text-muted small text-uppercase fw-semibold">Approved Hours</span>
+                            <h3 class="fw-bold mb-0" th:text="${#numbers.formatDecimal(totalHours, 1, 1)}">0.0</h3>
+                            <span class="text-muted small text-uppercase fw-semibold">Total Hours</span>
                         </div>
                     </div>
                 </div>
@@ -97,22 +97,16 @@
                 <i class="bi bi-funnel me-1"></i> Volunteering Opportunity Pipeline
             </h6>
             <div class="row g-3 text-center">
-                <div class="col-md-4">
+                <div class="col-md-6">
                     <div class="p-2 border rounded bg-warning-subtle text-warning-emphasis">
                         <h4 class="fw-bold mb-1" th:text="${pendingOpportunitiesCount}">0</h4>
                         <span class="small fw-semibold">Pending Review</span>
                     </div>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-6">
                     <div class="p-2 border rounded bg-success-subtle text-success-emphasis">
                         <h4 class="fw-bold mb-1" th:text="${approvedOpportunitiesCount}">0</h4>
                         <span class="small fw-semibold">Approved &amp; Live</span>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="p-2 border rounded bg-danger-subtle text-danger-emphasis">
-                        <h4 class="fw-bold mb-1" th:text="${rejectedOpportunitiesCount}">0</h4>
-                        <span class="small fw-semibold">Rejected</span>
                     </div>
                 </div>
             </div>
@@ -124,8 +118,8 @@
                 <h5 class="fw-bold mb-0">
                     <i class="bi bi-activity text-primary me-2"></i> Recent Platform Activity
                 </h5>
-                <a th:href="@{/admin/activity-logs}" class="btn btn-sm btn-outline-secondary">
-                    View Full Audit Trail <i class="bi bi-arrow-right ms-1"></i>
+                <a th:href="@{/admin/monitoring}" class="btn btn-sm btn-outline-secondary">
+                    View All in Monitoring <i class="bi bi-arrow-right ms-1"></i>
                 </a>
             </div>
             <div class="card-body p-0">

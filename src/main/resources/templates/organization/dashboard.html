@@ -23,9 +23,6 @@
                 <a th:href="@{/org/opportunities/new}" class="btn btn-primary">
                     <i class="bi bi-plus-circle me-1"></i> Post New Event
                 </a>
-                <a th:href="@{/org/report}" class="btn btn-outline-secondary">
-                    <i class="bi bi-printer me-1"></i> Print Report
-                </a>
             </div>
         </div>
 
@@ -76,7 +73,7 @@
                 </div>
             </div>
 
-            <!-- Approved Service Hours -->
+            <!-- Total Service Hours -->
             <div class="col-sm-6 col-lg-3">
                 <div class="card p-3 stat-card bg-white card-hover" style="border-left-color: #8b5cf6;">
                     <div class="d-flex align-items-center gap-3">
@@ -84,36 +81,17 @@
                             <i class="bi bi-clock-history"></i>
                         </div>
                         <div>
-                            <h3 class="fw-bold mb-0" th:text="${#numbers.formatDecimal(totalApprovedHours, 1, 1)}">0.0</h3>
-                            <span class="text-muted small text-uppercase fw-semibold">Approved Hours</span>
+                            <h3 class="fw-bold mb-0" th:text="${#numbers.formatDecimal(totalHours, 1, 1)}">0.0</h3>
+                            <span class="text-muted small text-uppercase fw-semibold">Total Hours</span>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Action Banners -->
-        <div class="row g-3 mb-4">
-            <!-- Pending Hour Approvals Notice -->
-            <div class="col-md-6" th:if="${pendingHoursCount > 0}">
-                <div class="card bg-warning-subtle text-warning-emphasis p-3 border-warning">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div class="d-flex align-items-center gap-3">
-                            <i class="bi bi-exclamation-circle-fill fs-3 text-warning"></i>
-                            <div>
-                                <h6 class="fw-bold mb-0">Pending Hour Submissions</h6>
-                                <p class="small mb-0">You have <strong th:text="${pendingHoursCount}">0</strong> volunteer hour log(s) awaiting verification.</p>
-                            </div>
-                        </div>
-                        <a th:href="@{/org/hours}" class="btn btn-warning btn-sm fw-semibold">
-                            Review Now <i class="bi bi-arrow-right ms-1"></i>
-                        </a>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Pending Opportunity Notice -->
-            <div class="col-md-6" th:if="${pendingOpportunities > 0}">
+        <!-- Pending Notice -->
+        <div class="row g-3 mb-4" th:if="${pendingOpportunities > 0}">
+            <div class="col-12">
                 <div class="card bg-info-subtle text-info-emphasis p-3 border-info">
                     <div class="d-flex justify-content-between align-items-center">
                         <div class="d-flex align-items-center gap-3">
@@ -127,31 +105,6 @@
                             View Events <i class="bi bi-arrow-right ms-1"></i>
                         </a>
                     </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Quick Links Hub -->
-        <div class="card p-4 bg-white shadow-sm">
-            <h5 class="fw-bold mb-3">Quick Actions</h5>
-            <div class="row g-3">
-                <div class="col-md-4">
-                    <a th:href="@{/org/opportunities/new}" class="card p-3 text-decoration-none border h-100 card-hover bg-light">
-                        <div class="fw-bold text-dark mb-1"><i class="bi bi-plus-circle text-primary me-2"></i>Create New Opportunity</div>
-                        <small class="text-muted">Post a new volunteering drive with date, slots, and responsibilities.</small>
-                    </a>
-                </div>
-                <div class="col-md-4">
-                    <a th:href="@{/org/opportunities}" class="card p-3 text-decoration-none border h-100 card-hover bg-light">
-                        <div class="fw-bold text-dark mb-1"><i class="bi bi-people text-info me-2"></i>Manage Rosters &amp; Attendance</div>
-                        <small class="text-muted">View registered volunteers and mark attendance on event day.</small>
-                    </a>
-                </div>
-                <div class="col-md-4">
-                    <a th:href="@{/messages}" class="card p-3 text-decoration-none border h-100 card-hover bg-light">
-                        <div class="fw-bold text-dark mb-1"><i class="bi bi-chat-dots text-success me-2"></i>Volunteer Direct Messages</div>
-                        <small class="text-muted">Communicate directly with volunteers who signed up for your events.</small>
-                    </a>
                 </div>
             </div>
         </div>

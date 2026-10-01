@@ -21,11 +21,11 @@ import java.util.Map;
  * OrganizationController (Presentation Layer)
  * ---------------------------------------------------------------------
  * Handles all actions for hosting Organizations (/org/**):
- * - Org Dashboard with event status metrics and approved hours
+ * - Org Dashboard with simple counts
  * - Opportunity CRUD (Post, Edit, Delete events)
  * - Volunteer Attendance Marking (ATTENDED / ABSENT on/after event date)
- * - Volunteer Hour Log Review & Approvals
- * - Participation Summary Report with printable view
+ * - Participation Summary Report with Print button
+ * - Messages with registered volunteers
  * =====================================================================
  */
 @Controller
@@ -48,7 +48,7 @@ public class OrganizationController {
     }
 
     /**
-     * Displays the Organization Dashboard with KPI cards and pending action counters.
+     * Displays the Organization Dashboard with simple KPI counts.
      */
     @GetMapping("/dashboard")
     public String showDashboard(HttpSession session, Model model) {
@@ -56,10 +56,8 @@ public class OrganizationController {
         model.addAttribute("totalOpportunities", opportunityService.countByOrganization(org));
         model.addAttribute("approvedOpportunities", opportunityService.countByOrganizationAndStatus(org, OpportunityStatus.APPROVED));
         model.addAttribute("pendingOpportunities", opportunityService.countByOrganizationAndStatus(org, OpportunityStatus.PENDING));
-        model.addAttribute("rejectedOpportunities", opportunityService.countByOrganizationAndStatus(org, OpportunityStatus.REJECTED));
         model.addAttribute("totalVolunteersRegistered", registrationService.countByOrganization(org));
-        model.addAttribute("totalApprovedHours", hourLogService.getTotalApprovedHoursForOrganization(org));
-        model.addAttribute("pendingHoursCount", hourLogService.countPendingHoursForOrganization(org));
+        model.addAttribute("totalHours", hourLogService.getTotalHoursForOrganization(org));
         return "organization/dashboard";
     }
 
@@ -93,7 +91,7 @@ public class OrganizationController {
         try {
             User org = (User) session.getAttribute("loggedInUser");
             opportunityService.createOpportunity(opportunity, org);
-            redirectAttributes.addFlashAttribute("successMessage", "Opportunity submitted successfully!");
+            redirectAttributes.addFlashAttribute("successMessage", "Opportunity submitted for Admin review!");
             return "redirect:/org/opportunities";
         } catch (Exception ex) {
             redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
@@ -135,7 +133,7 @@ public class OrganizationController {
         try {
             User org = (User) session.getAttribute("loggedInUser");
             opportunityService.updateOpportunity(id, updatedOpp, org);
-            redirectAttributes.addFlashAttribute("successMessage", "Opportunity updated successfully!");
+            redirectAttributes.addFlashAttribute("successMessage", "Opportunity updated and re-submitted for review!");
             return "redirect:/org/opportunities";
         } catch (Exception ex) {
             redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
@@ -204,35 +202,7 @@ public class OrganizationController {
     }
 
     /**
-     * Displays pending hour log submissions from volunteers awaiting organization review.
-     */
-    @GetMapping("/hours")
-    public String showHourApprovals(HttpSession session, Model model) {
-        User org = (User) session.getAttribute("loggedInUser");
-        model.addAttribute("pendingHours", hourLogService.getPendingHoursForOrganization(org));
-        return "organization/hours";
-    }
-
-    /**
-     * Processes organization's decision to APPROVE or REJECT a volunteer's logged hours.
-     */
-    @PostMapping("/hours/review/{id}")
-    public String reviewHours(@PathVariable("id") Long hourLogId,
-                              @RequestParam("status") HourLogStatus status,
-                              HttpSession session,
-                              RedirectAttributes redirectAttributes) {
-        try {
-            User org = (User) session.getAttribute("loggedInUser");
-            hourLogService.reviewHours(hourLogId, status, org);
-            redirectAttributes.addFlashAttribute("successMessage", "Hour submission " + status + " successfully.");
-        } catch (Exception ex) {
-            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
-        }
-        return "redirect:/org/hours";
-    }
-
-    /**
-     * Generates a comprehensive participation summary report per event with printable view.
+     * Generates a participation summary report per event with Print button.
      */
     @GetMapping("/report")
     public String showParticipationReport(HttpSession session, Model model) {
@@ -249,7 +219,7 @@ public class OrganizationController {
                     + registrationService.countByOpportunityAndStatus(opp, RegistrationStatus.ABSENT));
             row.put("attendedCount", registrationService.countByOpportunityAndStatus(opp, RegistrationStatus.ATTENDED));
             row.put("absentCount", registrationService.countByOpportunityAndStatus(opp, RegistrationStatus.ABSENT));
-            row.put("approvedHours", hourLogService.getTotalApprovedHoursForOpportunity(opp));
+            row.put("totalHours", hourLogService.getTotalHoursForOpportunity(opp));
             reportRows.add(row);
         }
 

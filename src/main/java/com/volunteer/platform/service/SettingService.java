@@ -33,7 +33,7 @@ public class SettingService {
      */
     public String getValue(String key, String defaultValue) {
         return settingRepository.findBySettingKey(key)
-                .map(SystemSetting::getSettingValue)
+                .map(setting -> setting.getSettingValue())
                 .orElse(defaultValue);
     }
 

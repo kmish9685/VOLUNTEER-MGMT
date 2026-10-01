@@ -42,7 +42,7 @@ public class HomeController {
         model.addAttribute("featuredOpportunities", opportunityService.getTopUpcomingApprovedOpportunities());
         model.addAttribute("totalVolunteers", userService.countVolunteers());
         model.addAttribute("totalOrganizations", userService.countOrganizations());
-        model.addAttribute("totalHours", hourLogService.getTotalApprovedHoursPlatform());
+        model.addAttribute("totalHours", hourLogService.getTotalHoursPlatform());
         return "index";
     }
 }

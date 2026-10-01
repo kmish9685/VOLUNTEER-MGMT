@@ -16,34 +16,31 @@ import java.util.Optional;
  * OpportunityService (Business Logic Layer)
  * ---------------------------------------------------------------------
  * Handles all business logic for volunteering opportunities:
- * - Posting opportunities with dynamic auto-approval setting checks
+ * - All new and edited opportunities go to PENDING status (no auto-approve)
  * - Organization update & delete permissions
  * - Admin approval and rejection workflow with feedback remarks
  * - Filtering upcoming approved events for volunteers and public landing
  * =====================================================================
  */
-@SuppressWarnings("null") // Spring Data JPA's findById(Long) is always called with non-null ids from path variables
+@SuppressWarnings("null")
 @Service
 public class OpportunityService {
 
     private final OpportunityRepository opportunityRepository;
-    private final SettingService settingService;
     private final ActivityLogService activityLogService;
 
     /**
-     * Constructor for injecting repository, setting, and audit services.
+     * Constructor for injecting repository and audit services.
      */
     public OpportunityService(OpportunityRepository opportunityRepository,
-                              SettingService settingService,
                               ActivityLogService activityLogService) {
         this.opportunityRepository = opportunityRepository;
-        this.settingService = settingService;
         this.activityLogService = activityLogService;
     }
 
     /**
      * Creates a new volunteering opportunity for an Organization.
-     * Evaluates the "auto_approve_opportunities" setting to decide initial status.
+     * Status is always set to PENDING — Admin must review and approve.
      */
     @Transactional
     public Opportunity createOpportunity(Opportunity opportunity, User organization) {
@@ -54,18 +51,16 @@ public class OpportunityService {
             throw new IllegalArgumentException("Event date cannot be in the past.");
         }
 
-        boolean autoApprove = settingService.getBoolean("auto_approve_opportunities", false);
-        opportunity.setStatus(autoApprove ? OpportunityStatus.APPROVED : OpportunityStatus.PENDING);
+        opportunity.setStatus(OpportunityStatus.PENDING);
         opportunity.setOrganization(organization);
 
         Opportunity saved = opportunityRepository.save(opportunity);
-        activityLogService.log(organization, "Organization posted new opportunity: " + saved.getTitle() +
-                (autoApprove ? " (Auto-Approved)" : " (Pending Review)"));
+        activityLogService.log(organization, "Organization posted new opportunity: " + saved.getTitle() + " (Pending Review)");
         return saved;
     }
 
     /**
-     * Updates an opportunity's details. Resets status back to PENDING unless auto-approval is active.
+     * Updates an opportunity's details. Resets status back to PENDING for re-review.
      */
     @Transactional
     public Opportunity updateOpportunity(Long id, Opportunity updatedData, User organization) {
@@ -90,9 +85,7 @@ public class OpportunityService {
         existing.setStartTime(updatedData.getStartTime());
         existing.setEndTime(updatedData.getEndTime());
         existing.setTotalSlots(updatedData.getTotalSlots());
-
-        boolean autoApprove = settingService.getBoolean("auto_approve_opportunities", false);
-        existing.setStatus(autoApprove ? OpportunityStatus.APPROVED : OpportunityStatus.PENDING);
+        existing.setStatus(OpportunityStatus.PENDING);
         existing.setAdminRemark(null);
 
         Opportunity saved = opportunityRepository.save(existing);
@@ -171,7 +164,7 @@ public class OpportunityService {
     }
 
     /**
-     * Retrieves the top 6 upcoming approved opportunities to display on the public landing page.
+     * Retrieves the top 6 upcoming approved opportunities for the public landing page.
      */
     public List<Opportunity> getTopUpcomingApprovedOpportunities() {
         return opportunityRepository.findTop6ByStatusAndEventDateGreaterThanEqualOrderByEventDateAsc(

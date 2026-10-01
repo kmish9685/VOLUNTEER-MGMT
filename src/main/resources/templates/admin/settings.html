@@ -96,13 +96,9 @@
                             <strong class="text-dark">allow_registrations:</strong><br>
                             If set to <code>false</code>, <code>UserService.registerUser()</code> blocks new signups and <code>register.html</code> displays a "Registrations are closed" banner.
                         </li>
-                        <li class="mb-3">
+                        <li>
                             <strong class="text-dark">max_hours_per_log:</strong><br>
                             Enforced in <code>HourLogService.logHours()</code>. Volunteers cannot log hours exceeding this threshold in a single entry.
-                        </li>
-                        <li>
-                            <strong class="text-dark">auto_approve_opportunities:</strong><br>
-                            Evaluated in <code>OpportunityService.createOpportunity()</code>. If true, newly posted events bypass Admin review and are immediately <code>APPROVED</code>.
                         </li>
                     </ul>
                 </div>

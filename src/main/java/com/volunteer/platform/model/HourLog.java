@@ -8,8 +8,7 @@ import java.time.LocalDateTime;
  * HourLog Entity (Model Layer)
  * ---------------------------------------------------------------------
  * Records the service hours contributed by a volunteer who attended an event.
- * Must be reviewed and approved by the hosting Organization before the hours
- * count toward the volunteer's verified community service credentials.
+ * Hours are counted immediately when submitted — no approval step required.
  *
  * Stored in the "hour_logs" table in PostgreSQL (Supabase).
  * =====================================================================
@@ -32,10 +31,6 @@ public class HourLog {
     @Column(columnDefinition = "TEXT")
     private String workDescription;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
-    private HourLogStatus status;
-
     @Column(nullable = false, updatable = false)
     private LocalDateTime loggedAt;
 
@@ -48,11 +43,10 @@ public class HourLog {
     /**
      * Parameterized constructor for creating a new hour log record.
      */
-    public HourLog(Registration registration, double hours, String workDescription, HourLogStatus status) {
+    public HourLog(Registration registration, double hours, String workDescription) {
         this.registration = registration;
         this.hours = hours;
         this.workDescription = workDescription;
-        this.status = status;
         this.loggedAt = LocalDateTime.now();
     }
 
@@ -63,9 +57,6 @@ public class HourLog {
     protected void onCreate() {
         if (this.loggedAt == null) {
             this.loggedAt = LocalDateTime.now();
-        }
-        if (this.status == null) {
-            this.status = HourLogStatus.PENDING;
         }
     }
 
@@ -127,20 +118,6 @@ public class HourLog {
      */
     public void setWorkDescription(String workDescription) {
         this.workDescription = workDescription;
-    }
-
-    /**
-     * Returns the approval status of this hour log (PENDING, APPROVED, REJECTED).
-     */
-    public HourLogStatus getStatus() {
-        return status;
-    }
-
-    /**
-     * Sets the approval status of this hour log.
-     */
-    public void setStatus(HourLogStatus status) {
-        this.status = status;
     }
 
     /**

@@ -48,7 +48,7 @@
                                 <th scope="col" class="text-center">Registered</th>
                                 <th scope="col" class="text-center">Attended</th>
                                 <th scope="col" class="text-center">Absent</th>
-                                <th scope="col" class="text-end">Approved Hours</th>
+                                <th scope="col" class="text-end">Total Hours</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -66,7 +66,7 @@
                                 <td class="text-center fw-bold text-success" th:text="${row.attendedCount}">12</td>
                                 <td class="text-center text-muted" th:text="${row.absentCount}">2</td>
                                 <td class="text-end fw-bold text-dark">
-                                    <span th:text="${#numbers.formatDecimal(row.approvedHours, 1, 1)}">48.0</span> hrs
+                                    <span th:text="${#numbers.formatDecimal(row.totalHours, 1, 1)}">48.0</span> hrs
                                 </td>
                             </tr>
                         </tbody>
