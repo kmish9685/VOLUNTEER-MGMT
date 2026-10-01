@@ -79,29 +79,28 @@ http://localhost:8080/
 ## ✨ Feature List by Role
 
 ### 🔴 ADMIN (`/admin/...`)
-- Dashboard with KPI counters (volunteers, orgs, signups, approved hours)
+- Dashboard with KPI counters (volunteers, orgs, signups, total hours)
 - User Management — Create, edit, block/unblock, delete any user
-- Review Opportunities — Approve or Reject with feedback remark
-- View all opportunities, all registrations, complete audit log
-- System Settings — Edit 4 platform-wide configuration values
+- Review Opportunities — Approve or Reject with feedback remark (shows pending on top, all others below)
+- Platform Monitoring — Single combined page showing all registrations + real-time activity audit log
+- System Settings — Configure 3 platform-wide values (`platform_name`, `allow_registrations`, `max_hours_per_log`)
 
 ### 🔵 ORGANIZATION (`/org/...`)
 - Dashboard with personal event metrics
 - Post, edit, delete volunteering opportunities
 - View registered volunteer roster per event
 - Mark attendance (ATTENDED / ABSENT) on or after event date
-- Review and approve/reject volunteer hour submissions
 - Printable participation summary report (`window.print()`)
 - Direct messaging with registered volunteers
 
 ### 🟢 VOLUNTEER (`/volunteer/...`)
-- Dashboard with verified hours, upcoming events
+- Dashboard with total hours and upcoming events
 - Browse approved upcoming opportunities with live slot counter
 - Search by event title or location
 - View event details and hosting organization info
 - Sign up and cancel registration (before event date)
-- Log service hours (after attendance confirmed)
-- Complete participation history with hour log status
+- Log service hours for attended events (hours count immediately, no approval step needed)
+- Complete participation history with logged hours
 - Direct messaging with hosting organizations
 
 ### 💬 MESSAGING (`/messages/...`)
@@ -117,7 +116,7 @@ http://localhost:8080/
 src/main/java/com/volunteer/platform/
 ├── VolunteerPlatformApplication.java   ← Spring Boot entry point + BCrypt bean
 ├── config/                             ← Interceptor, WebConfig, GlobalModelAttributes, DataLoader
-├── model/                              ← 7 JPA entities + 5 enums (NO Lombok)
+├── model/                              ← 7 JPA entities + 3 enums (NO Lombok)
 ├── repository/                         ← 7 Spring Data JPA interfaces
 ├── service/                            ← ALL business logic rules
 └── controller/                         ← 6 controllers (call services, return views)
@@ -131,9 +130,9 @@ src/main/resources/
     ├── index.html                      ← Public landing page
     ├── error.html                      ← Custom error page
     ├── auth/                           ← login.html, register.html
-    ├── admin/                          ← 8 admin pages
-    ├── organization/                   ← 6 org pages
-    ├── volunteer/                      ← 5 volunteer pages
+    ├── admin/                          ← 6 admin pages (dashboard, users, user-form, review-opportunities, monitoring, settings)
+    ├── organization/                   ← 5 org pages (dashboard, opportunities, opportunity-form, volunteers, report)
+    ├── volunteer/                      ← 5 volunteer pages (dashboard, browse, opportunity-details, log-hours, history)
     └── messages/                       ← inbox.html (chat UI)
 
 db-secret.properties                    ← LOCAL ONLY — Supabase credentials (in .gitignore)
@@ -164,7 +163,7 @@ db-secret.properties                    ← LOCAL ONLY — Supabase credentials 
 2. Run `.\run.cmd` in PowerShell
 3. Open `http://localhost:8080/`
 4. Use the quick demo login buttons on the login page to demonstrate all 3 roles
-5. Walk through: Register → Admin Approve → Volunteer Signup → Attendance → Log Hours → Approve Hours → Messages → Admin Dashboard
+5. Walk through: Register → Admin Approve → Volunteer Signup → Attendance → Log Hours → Messages → Admin Dashboard
 
 ---
 

@@ -18,10 +18,9 @@ We built **VolunteerHub** — a web application where:
 2. **Admin** reviews and approves events
 3. **Volunteers** browse approved events and sign up
 4. Organizations **mark attendance** on event day
-5. Volunteers **log their service hours**
-6. Organizations **approve the hours**
-7. Everyone can **message each other**
-8. Admin can **monitor everything** from a single dashboard
+5. Volunteers **log their service hours** (hours count immediately for attended events)
+6. Everyone can **message each other**
+7. Admin can **monitor everything** from a single dashboard
 
 ---
 
@@ -55,7 +54,7 @@ CONTROLLER Layer (@Controller)
 SERVICE Layer (@Service)
    │  All business rules here:
    │  - Is the slot full? Is the event past? Is the user blocked?
-   │  - Enforces settings (max_hours_per_log, auto_approve, etc.)
+   │  - Enforces settings (max_hours_per_log, allow_registrations, platform_name)
    │  - Calls the repository to read/write data
    ▼
 REPOSITORY Layer (JpaRepository interfaces)
@@ -124,13 +123,13 @@ BROWSER displays the final HTML page
 
 | Table | Java Entity | Purpose | Key Relationships |
 |-------|------------|---------|-------------------|
-| `users` | `User.java` | All accounts (Admin, Org, Volunteer) | — |
-| `opportunities` | `Opportunity.java` | Volunteering events posted by Orgs | ManyToOne → users (organization_id) |
-| `registrations` | `Registration.java` | Volunteer signups for events | ManyToOne → users + opportunities |
+| `app_users` | `User.java` | All accounts (Admin, Org, Volunteer) | — |
+| `opportunities` | `Opportunity.java` | Volunteering events posted by Orgs | ManyToOne → app_users (organization_id) |
+| `registrations` | `Registration.java` | Volunteer signups for events | ManyToOne → app_users + opportunities |
 | `hour_logs` | `HourLog.java` | Service hours logged by volunteers | ManyToOne → registrations |
-| `messages` | `Message.java` | 1-on-1 messages between Org & Volunteer | ManyToOne → users (sender + receiver) |
+| `messages` | `Message.java` | 1-on-1 messages between Org & Volunteer | ManyToOne → app_users (sender + receiver) |
 | `system_settings` | `SystemSetting.java` | Platform config key-value pairs | — |
-| `activity_logs` | `ActivityLog.java` | Audit trail for Admin monitoring | ManyToOne → users (nullable) |
+| `activity_logs` | `ActivityLog.java` | Audit trail for Admin monitoring | ManyToOne → app_users (nullable) |
 
 ### ER Relationships in Plain English:
 - One **User** (org) can have many **Opportunities**
@@ -166,10 +165,9 @@ BROWSER displays the final HTML page
 
 | Setting Key | Value | What Java Code It Affects |
 |------------|-------|--------------------------|
-| `platform_name` | `VolunteerHub` | `GlobalModelAttributes.getPlatformName()` → exposes to every Thymeleaf template |
+| `platform_name` | `VolunteerHub` | `GlobalModelAttributes.getPlatformName()` → exposes brand name to every Thymeleaf template |
 | `allow_registrations` | `true` / `false` | `UserService.registerUser()` → throws exception if `false`; `register.html` shows "Closed" banner |
 | `max_hours_per_log` | `12` (number) | `HourLogService.logHours()` → throws exception if submitted hours exceed this limit |
-| `auto_approve_opportunities` | `true` / `false` | `OpportunityService.createOpportunity()` → sets status to `APPROVED` directly if `true` |
 
 ---
 
@@ -177,24 +175,35 @@ BROWSER displays the final HTML page
 
 | Feature | Controller Method | Service Method | Template |
 |---------|------------------|----------------|----------|
-| Public landing page | `HomeController.showLandingPage()` | `getTopUpcomingApproved()` | `index.html` |
+| Public landing page | `HomeController.showLandingPage()` | `getTopUpcomingApprovedOpportunities()` | `index.html` |
 | Login | `AuthController.processLogin()` | `UserService.authenticate()` | `auth/login.html` |
 | Register | `AuthController.processRegister()` | `UserService.registerUser()` | `auth/register.html` |
 | Admin dashboard | `AdminController.showDashboard()` | Multiple count services | `admin/dashboard.html` |
-| User management | `AdminController.listUsers()` | `UserService.searchAndFilter()` | `admin/users.html` |
-| Block/Unblock user | `AdminController.toggleUserStatus()` | `UserService.toggleUserStatus()` | Redirect to users |
-| Review opportunity | `AdminController.reviewOpportunity()` | `OpportunityService.reviewOpportunity()` | `admin/review-opportunities.html` |
-| Edit settings | `AdminController.updateSetting()` | `SettingService.updateSetting()` | `admin/settings.html` |
+| User management | `AdminController.listUsers()` | `UserService.searchAndFilterUsers()` | `admin/users.html` |
+| Create user form | `AdminController.showCreateUserForm()` | `UserService.createUserByAdmin()` | `admin/user-form.html` |
+| Edit user form | `AdminController.showEditUserForm()` | `UserService.updateUserByAdmin()` | `admin/user-form.html` |
+| Block/Unblock user | `AdminController.toggleUserStatus()` | `UserService.toggleUserStatus()` | Redirect to `/admin/users` |
+| Delete user | `AdminController.deleteUser()` | `UserService.deleteUser()` | Redirect to `/admin/users` |
+| Review opportunities | `AdminController.showReviewOpportunities()` | `OpportunityService.getPendingOpportunities()`, `getAllOpportunities()` | `admin/review-opportunities.html` (pending on top, all below) |
+| Review decision | `AdminController.reviewOpportunity()` | `OpportunityService.reviewOpportunity()` | Redirect to `/admin/opportunities/review` |
+| Platform monitoring | `AdminController.showMonitoring()` | `RegistrationService.getAllRegistrations()`, `ActivityLogService.getAllLogs()` | `admin/monitoring.html` (registrations + audit logs) |
+| Edit settings | `AdminController.showSettings()` | `SettingService.getAllSettings()` | `admin/settings.html` |
+| Update setting | `AdminController.updateSetting()` | `SettingService.updateSetting()` | Redirect to `/admin/settings` |
 | Org dashboard | `OrganizationController.showDashboard()` | Multiple count services | `organization/dashboard.html` |
-| Post opportunity | `OrganizationController.processCreateOpportunity()` | `OpportunityService.createOpportunity()` | `organization/opportunity-form.html` |
-| Mark attendance | `OrganizationController.markAttendance()` | `RegistrationService.markAttendance()` | `organization/volunteers.html` |
-| Approve hours | `OrganizationController.reviewHours()` | `HourLogService.reviewHours()` | `organization/hours.html` |
-| Browse events | `VolunteerController.browseOpportunities()` | `OpportunityService.getUpcomingApproved()` | `volunteer/browse.html` |
-| Sign up | `VolunteerController.processSignUp()` | `RegistrationService.signUp()` | Redirect to dashboard |
-| Cancel registration | `VolunteerController.processCancel()` | `RegistrationService.cancelRegistration()` | Redirect to dashboard |
+| My events | `OrganizationController.listOpportunities()` | `OpportunityService.getOpportunitiesByOrganization()` | `organization/opportunities.html` |
+| Post event | `OrganizationController.processCreateOpportunity()` | `OpportunityService.createOpportunity()` | `organization/opportunity-form.html` |
+| Edit event | `OrganizationController.processEditOpportunity()` | `OpportunityService.updateOpportunity()` | `organization/opportunity-form.html` |
+| View volunteer roster | `OrganizationController.viewVolunteers()` | `RegistrationService.getRegistrationsForOpportunity()` | `organization/volunteers.html` |
+| Mark attendance | `OrganizationController.markAttendance()` | `RegistrationService.markAttendance()` | Redirect to `/org/volunteers/{id}` |
+| Participation report | `OrganizationController.showParticipationReport()` | `hourLogService.getTotalHoursForOpportunity()` | `organization/report.html` |
+| Volunteer dashboard | `VolunteerController.showDashboard()` | `hourLogService.getTotalHoursForVolunteer()` | `volunteer/dashboard.html` |
+| Browse events | `VolunteerController.browseOpportunities()` | `OpportunityService.getUpcomingApprovedOpportunities()` | `volunteer/browse.html` |
+| Event details | `VolunteerController.showOpportunityDetails()` | `OpportunityService.getOpportunityById()` | `volunteer/opportunity-details.html` |
+| Sign up | `VolunteerController.processSignUp()` | `RegistrationService.signUp()` | Redirect to `/volunteer/dashboard` |
+| Cancel registration | `VolunteerController.processCancel()` | `RegistrationService.cancelRegistration()` | Redirect to `/volunteer/dashboard` |
 | Log hours | `VolunteerController.processLogHours()` | `HourLogService.logHours()` | `volunteer/log-hours.html` |
 | Participation history | `VolunteerController.showParticipationHistory()` | Multiple services | `volunteer/history.html` |
-| Send message | `MessageController.sendMessage()` | `MessageService.sendMessage()` | Redirect to inbox |
+| Send message | `MessageController.sendMessage()` | `MessageService.sendMessage()` | Redirect to `/messages?userId=...` |
 | View conversation | `MessageController.showInbox()` | `MessageService.getConversation()` | `messages/inbox.html` |
 
 ---
@@ -203,7 +212,7 @@ BROWSER displays the final HTML page
 
 ```
 config/    → Cross-cutting concerns (interceptor, global model, startup data)
-model/     → Plain Java classes representing database tables (@Entity)
+model/     → Plain Java classes representing database tables (@Entity) + Enums
 repository/→ Interfaces that talk to the database (Spring generates the SQL)
 service/   → ALL business rules and validation (the brain of the app)
 controller/→ HTTP handlers — receive request, call service, return view name
@@ -284,8 +293,8 @@ It marks a method that runs automatically just before JPA saves a new entity to 
 **Q23. How do we prevent a volunteer from signing up twice?**
 In `RegistrationService.signUp()`, we call `registrationRepository.existsByVolunteerAndOpportunityAndStatusNot(volunteer, opportunity, CANCELLED)`. If it returns `true`, we throw an `IllegalStateException("You are already registered...")`. The unique constraint `(volunteer_id, opportunity_id)` in the database also enforces this at the SQL level.
 
-**Q24. How does the auto-approve setting affect opportunity posting?**
-In `OpportunityService.createOpportunity()`, before saving the opportunity, we call `settingService.getBoolean("auto_approve_opportunities", false)`. If `true`, we set `status = APPROVED` directly. If `false`, we set `status = PENDING` and the Admin must review it.
+**Q24. How does volunteer service hour tracking work?**
+Once an organization marks a volunteer as `ATTENDED` for an event, the volunteer can log their contributed hours via `HourLogService.logHours()`. The service validates that hours do not exceed `max_hours_per_log` from `SettingService`. Hours count immediately toward the volunteer's service record and organization impact reports without needing a separate approval step.
 
 **Q25. What is the request lifecycle in Spring MVC?**
 Browser → Tomcat (embedded) → `DispatcherServlet` → `LoginInterceptor.preHandle()` → `@Controller` method → `@Service` method → `@Repository` → Database → back up the chain → `Model` filled with data → `DispatcherServlet` picks the view → Thymeleaf processes the HTML template → HTML sent to Browser.

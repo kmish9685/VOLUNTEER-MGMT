@@ -11,7 +11,6 @@ import jakarta.persistence.*;
  * - platform_name: Displayed in the navbar and title.
  * - allow_registrations: Controls whether new registrations are open.
  * - max_hours_per_log: Maximum hours a volunteer can log in one entry.
- * - auto_approve_opportunities: Bypasses admin review if true.
  *
  * Stored in the "system_settings" table in PostgreSQL (Supabase).
  * =====================================================================

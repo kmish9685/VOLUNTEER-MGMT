@@ -38,7 +38,7 @@ public class SettingService {
     }
 
     /**
-     * Retrieves a setting value as a boolean (e.g. "allow_registrations", "auto_approve_opportunities").
+     * Retrieves a setting value as a boolean (e.g. "allow_registrations").
      */
     public boolean getBoolean(String key, boolean defaultValue) {
         String val = getValue(key, null);
