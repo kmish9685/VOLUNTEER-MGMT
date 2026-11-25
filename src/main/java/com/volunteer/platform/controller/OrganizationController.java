@@ -1,5 +1,7 @@
 package com.volunteer.platform.controller;
 
+import com.volunteer.platform.jdbc.ParticipationReportDao;
+import com.volunteer.platform.jdbc.ParticipationReportRow;
 import com.volunteer.platform.model.*;
 import com.volunteer.platform.service.HourLogService;
 import com.volunteer.platform.service.OpportunityService;
@@ -11,10 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * =====================================================================
@@ -35,16 +34,19 @@ public class OrganizationController {
     private final OpportunityService opportunityService;
     private final RegistrationService registrationService;
     private final HourLogService hourLogService;
+    private final ParticipationReportDao participationReportDao;
 
     /**
-     * Injects OpportunityService, RegistrationService, and HourLogService.
+     * Injects OpportunityService, RegistrationService, HourLogService and the JDBC report DAO.
      */
     public OrganizationController(OpportunityService opportunityService,
                                   RegistrationService registrationService,
-                                  HourLogService hourLogService) {
+                                  HourLogService hourLogService,
+                                  ParticipationReportDao participationReportDao) {
         this.opportunityService = opportunityService;
         this.registrationService = registrationService;
         this.hourLogService = hourLogService;
+        this.participationReportDao = participationReportDao;
     }
 
     /**
@@ -160,26 +162,12 @@ public class OrganizationController {
 
     /**
      * Generates a participation summary report per event with Print button.
+     * The data comes from ONE plain-JDBC query (ParticipationReportDao).
      */
     @GetMapping("/report")
     public String showParticipationReport(HttpSession session, Model model) {
         User org = (User) session.getAttribute("loggedInUser");
-        List<Opportunity> opportunities = opportunityService.getOpportunitiesByOrganization(org);
-
-        List<Map<String, Object>> reportRows = new ArrayList<>();
-        for (Opportunity opp : opportunities) {
-            Map<String, Object> row = new HashMap<>();
-            row.put("opportunity", opp);
-            row.put("totalSlots", opp.getTotalSlots());
-            row.put("registeredCount", registrationService.countByOpportunityAndStatus(opp, RegistrationStatus.REGISTERED)
-                    + registrationService.countByOpportunityAndStatus(opp, RegistrationStatus.ATTENDED)
-                    + registrationService.countByOpportunityAndStatus(opp, RegistrationStatus.ABSENT));
-            row.put("attendedCount", registrationService.countByOpportunityAndStatus(opp, RegistrationStatus.ATTENDED));
-            row.put("absentCount", registrationService.countByOpportunityAndStatus(opp, RegistrationStatus.ABSENT));
-            row.put("totalHours", hourLogService.getTotalHoursForOpportunity(opp));
-            reportRows.add(row);
-        }
-
+        List<ParticipationReportRow> reportRows = participationReportDao.findReportByOrganization(org.getId());
         model.addAttribute("reportRows", reportRows);
         return "organization/report";
     }

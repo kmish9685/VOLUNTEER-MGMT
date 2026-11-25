@@ -20,6 +20,12 @@ import java.util.Optional;
  * - Allows volunteers to cancel registration before the event date
  * - Allows Organizations to mark attendance (ATTENDED / ABSENT) on/after event date
  * - Calculates remaining available slots per opportunity
+ *
+ * Concurrency safety (database level):
+ * - signUp() locks the event row (pessimistic lock) so two volunteers cannot
+ *   take the last slot at the same time.
+ * - The registrations table has a UNIQUE (volunteer_id, opportunity_id)
+ *   constraint, so the database itself rejects a duplicate sign-up.
  * =====================================================================
  */
 @SuppressWarnings("null") // Spring Data JPA's findById(Long) is always called with non-null ids from path variables
@@ -47,7 +53,10 @@ public class RegistrationService {
             throw new IllegalStateException("Your account is blocked. You cannot sign up for events.");
         }
 
-        Opportunity opportunity = opportunityRepository.findById(opportunityId)
+        // Row lock (SELECT ... FOR UPDATE): concurrent sign-ups for the SAME event wait here
+        // one by one, so the "slots full?" check below always sees the latest count.
+        // The lock is released automatically when this @Transactional method finishes.
+        Opportunity opportunity = opportunityRepository.findByIdForUpdate(opportunityId)
                 .orElseThrow(() -> new IllegalArgumentException("Opportunity not found with id: " + opportunityId));
 
         if (opportunity.getStatus() != OpportunityStatus.APPROVED) {

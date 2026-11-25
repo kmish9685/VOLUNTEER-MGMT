@@ -57,10 +57,10 @@
                             </tr>
                             <tr th:each="row : ${reportRows}">
                                 <td>
-                                    <div class="fw-bold text-dark" th:text="${row.opportunity.title}">Tree Plantation Drive</div>
-                                    <small class="text-muted"><i class="bi bi-geo-alt me-1 text-danger"></i><span th:text="${row.opportunity.location}">Location</span></small>
+                                    <div class="fw-bold text-dark" th:text="${row.title}">Tree Plantation Drive</div>
+                                    <small class="text-muted"><i class="bi bi-geo-alt me-1 text-danger"></i><span th:text="${row.location}">Location</span></small>
                                 </td>
-                                <td class="fw-semibold" th:text="${row.opportunity.eventDate}">2026-10-15</td>
+                                <td class="fw-semibold" th:text="${row.eventDate}">2026-10-15</td>
                                 <td class="text-center" th:text="${row.totalSlots}">25</td>
                                 <td class="text-center fw-semibold text-primary" th:text="${row.registeredCount}">15</td>
                                 <td class="text-center fw-bold text-success" th:text="${row.attendedCount}">12</td>

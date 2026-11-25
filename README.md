@@ -28,8 +28,8 @@ VolunteerHub is a web platform that **connects NGOs and Community Organizations 
 
 ### Step 1 – Clone the project
 ```bash
-git clone https://github.com/YOUR_USERNAME/YOUR_REPO_NAME.git
-cd "VOLUNTEER MGMT"
+git clone https://github.com/kmish9685/VOLUNTEER-MGMT.git
+cd VOLUNTEER-MGMT
 ```
 
 ### Step 2 – Configure Supabase (PostgreSQL)
@@ -114,9 +114,10 @@ http://localhost:8080/
 ```
 src/main/java/com/volunteer/platform/
 ├── VolunteerPlatformApplication.java   ← Spring Boot entry point + BCrypt bean
-├── config/                             ← Interceptor, WebConfig, GlobalModelAttributes, DataLoader
+├── config/                             ← SecurityConfig (Spring Security), Interceptor, WebConfig, DataLoader
 ├── model/                              ← 6 JPA entities + 3 enums (NO Lombok)
 ├── repository/                         ← 6 Spring Data JPA interfaces
+├── jdbc/                               ← Plain JDBC DAO (participation report)
 ├── service/                            ← ALL business logic rules
 └── controller/                         ← 6 controllers (call services, return views)
 
@@ -134,8 +135,55 @@ src/main/resources/
     ├── volunteer/                      ← 5 volunteer pages (dashboard, browse, opportunity-details, log-hours, history)
     └── messages/                       ← inbox.html (chat UI)
 
+src/test/java/com/volunteer/platform/   ← 27 automated tests (JUnit 5, Mockito, MockMvc)
+src/test/resources/application.properties ← Tests use in-memory H2, never Supabase
+
 db-secret.properties                    ← LOCAL ONLY — Supabase credentials (in .gitignore)
 ```
+
+---
+
+## 🧪 Running the Automated Tests
+
+```powershell
+.\mvnw.cmd test        # Windows
+./mvnw test            # Mac / Linux
+```
+
+Tests use an **in-memory H2 database**, so they work without Supabase or internet.
+
+| Test class | Type | What it checks |
+|------------|------|----------------|
+| `RegistrationServiceTest` | Integration | Sign-up rules: approved only, no past events, no double sign-up, slots full, cancel & re-join, attendance rules |
+| `HourLogServiceTest` | Integration | Hours only for ATTENDED, 0 rejected, over-limit (20) rejected, 4 accepted |
+| `ConcurrentSignUpTest` | Multithreading | 10 volunteers sign up at the same instant for 3 slots → exactly 3 succeed |
+| `ParticipationReportDaoTest` | JDBC | Plain JDBC report counts attended/absent/hours correctly |
+| `SecurityTest` | Web (MockMvc) | POST without CSRF token → 403, session id changes at login, role & blocked-user checks |
+| `SettingServiceTest` | Unit (Mockito) | Admin setting parsing, no database needed |
+
+---
+
+## 🔐 Security & Concurrency (added after Review 1)
+
+| Review 1 feedback | What we did | Where |
+|-------------------|-------------|-------|
+| Spring Security with CSRF | `spring-boot-starter-security`; every POST form carries a hidden `_csrf` token (added automatically by Thymeleaf `th:action`) | `config/SecurityConfig.java` |
+| Stronger session management | Session id changes at login, 30-min timeout, HttpOnly + SameSite cookie, no `jsessionid` in URLs | `AuthController.processLogin`, `application.properties` |
+| DB-level concurrency for limited slots | Event row locked with `SELECT ... FOR UPDATE` during sign-up + UNIQUE (volunteer, event) constraint | `OpportunityRepository.findByIdForUpdate`, `RegistrationService.signUp` |
+| Automated tests | 27 JUnit tests (see table above) | `src/test/java` |
+| Direct JDBC operations | Participation report built with `Connection` → `PreparedStatement` → `ResultSet` | `jdbc/ParticipationReportDao.java` |
+
+---
+
+## 👥 Team & Contributions
+
+| Member | Role in project | Main files |
+|--------|-----------------|------------|
+| Member 1 (name) | Problem analysis, JDBC report | `jdbc/ParticipationReportDao.java`, `ParticipationReportDaoTest` |
+| Member 2 (name) | Workflow, Spring Security & sessions | `config/SecurityConfig.java`, `AuthController`, `SecurityTest` |
+| Member 3 (name) | Database & concurrency | `OpportunityRepository`, `RegistrationService`, `ConcurrentSignUpTest` |
+| Member 4 (name) | Business rules & testing | `RegistrationServiceTest`, `HourLogServiceTest`, `SettingServiceTest` |
+| Member 5 (name) | Documentation, demo & presentation | `README.md`, presentation |
 
 ---
 
@@ -149,7 +197,9 @@ db-secret.properties                    ← LOCAL ONLY — Supabase credentials 
 | Thymeleaf | Server-side HTML template engine |
 | Spring Data JPA (Hibernate) | ORM — maps Java classes to PostgreSQL tables |
 | PostgreSQL (Supabase) | Hosted relational database — free cloud plan |
-| `spring-security-crypto` | BCrypt password hashing only (NOT full Spring Security) |
+| Spring Security | CSRF protection, session fixation protection, security headers, BCrypt hashing |
+| Plain JDBC (`DataSource`, `PreparedStatement`) | Participation report query |
+| JUnit 5 + Mockito + MockMvc | Automated tests (`mvnw test`) |
 | Bootstrap 5 (CDN) | Responsive UI components and layout grid |
 | Bootstrap Icons (CDN) | Icon library for visual indicators |
 | Spring Boot DevTools | Auto-reload during development |
@@ -169,7 +219,7 @@ db-secret.properties                    ← LOCAL ONLY — Supabase credentials 
 ## 📝 Notes for Viva
 
 - No Lombok — all getters/setters/constructors are **hand-written and visible**
-- No full Spring Security — authentication is **plain `HttpSession`** for easy explanation
+- Spring Security adds CSRF tokens to every form; role checks stay in `LoginInterceptor` for easy explanation
 - Every class and public method has a **plain-English comment block**
 - The `Settings` page has a sidebar explaining **exactly which Java code** each setting affects
 - `users` is a reserved word in PostgreSQL, so the table is mapped to `app_users` via `@Table(name = "app_users")`

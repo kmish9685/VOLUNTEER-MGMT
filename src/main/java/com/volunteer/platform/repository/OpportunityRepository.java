@@ -3,13 +3,16 @@ package com.volunteer.platform.repository;
 import com.volunteer.platform.model.Opportunity;
 import com.volunteer.platform.model.OpportunityStatus;
 import com.volunteer.platform.model.User;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * =====================================================================
@@ -72,4 +75,14 @@ public interface OpportunityRepository extends JpaRepository<Opportunity, Long> 
     List<Opportunity> searchUpcomingApproved(@Param("status") OpportunityStatus status,
                                             @Param("today") LocalDate today,
                                             @Param("query") String query);
+
+    /**
+     * Loads an opportunity and LOCKS its database row until the current transaction ends
+     * (SQL: SELECT ... FOR UPDATE). Used during volunteer sign-up so that when many
+     * volunteers click "Sign Up" at the same moment, they are processed one after another
+     * and the event can never be overbooked beyond its totalSlots.
+     */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT o FROM Opportunity o WHERE o.id = :id")
+    Optional<Opportunity> findByIdForUpdate(@Param("id") Long id);
 }
