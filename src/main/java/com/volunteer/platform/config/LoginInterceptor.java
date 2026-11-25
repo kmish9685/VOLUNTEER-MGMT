@@ -14,8 +14,9 @@ import org.springframework.web.servlet.HandlerInterceptor;
  * =====================================================================
  * LoginInterceptor (Security / Interceptor Layer)
  * ---------------------------------------------------------------------
- * Provides clean, session-based role authorization without the bloat
- * of full Spring Security.
+ * Provides session-based role authorization. It runs AFTER the Spring
+ * Security filter chain (see SecurityConfig), which handles CSRF tokens,
+ * session fixation and security headers.
  *
  * Rules:
  * - /admin/**     -> Accessible ONLY by users with role ADMIN

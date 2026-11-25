@@ -4,6 +4,7 @@ import com.volunteer.platform.model.Role;
 import com.volunteer.platform.model.User;
 import com.volunteer.platform.service.SettingService;
 import com.volunteer.platform.service.UserService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -59,14 +60,18 @@ public class AuthController {
 
     /**
      * Processes login credentials and stores the authenticated user in HttpSession.
+     * The session id is changed right after a successful login (session fixation protection):
+     * an attacker who planted or saw the old id cannot use it to enter the account.
      */
     @PostMapping("/login")
     public String processLogin(@RequestParam("email") String email,
                                @RequestParam("password") String password,
+                               HttpServletRequest request,
                                HttpSession session,
                                RedirectAttributes redirectAttributes) {
         try {
             User user = userService.authenticate(email, password);
+            request.changeSessionId(); // new session id, same session data
             session.setAttribute("loggedInUser", user);
             redirectAttributes.addFlashAttribute("successMessage", "Welcome back, " + user.getFullName() + "!");
             return getDashboardRedirect(user.getRole());

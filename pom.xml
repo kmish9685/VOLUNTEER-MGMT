@@ -61,10 +61,11 @@
             <scope>runtime</scope>
         </dependency>
 
-        <!-- ONLY BCrypt Password Hashing from Spring Security Crypto (NOT full Spring Security) -->
+        <!-- Spring Security: CSRF protection, session fixation protection,
+             security headers. Also includes BCrypt for password hashing. -->
         <dependency>
-            <groupId>org.springframework.security</groupId>
-            <artifactId>spring-security-crypto</artifactId>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security</artifactId>
         </dependency>
 
         <!-- Spring Boot DevTools for fast auto-reload during development -->
@@ -79,6 +80,13 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Spring Security test helpers (csrf() for MockMvc tests) -->
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-test</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>
